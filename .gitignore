@@ -1,0 +1,7 @@
+# ignore files
+
+# untrack autosave file
+.asv
+
+# untrack this folder
+instructions
