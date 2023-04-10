@@ -1,0 +1,37 @@
+plot(eset.expt.elapsedTime)  % gives the time(s)-frame relation, the slope is the time for each frame
+
+t_frame = eset.expt.elapsedTime(2)  % approximate time for each frame
+
+QUANTITYNAME	eset.expt.track(1).dq
+	eti: time not in period
+
+Three ways to get time of start to turn in period:
+	
+	1. Fail because tperiod isn't constant, so don't use mod
+	turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % not in period
+	turnStart = mod(turnStartTime, tperiod);  % in period
+
+	2. Fail because eset.expt.elapsedTime isn't a perfect line
+	turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');
+	nperiod = (turnStartTime(end) -  turnStartTime(1)) / tperiod;  % could be decimal, tperiod not constant
+	turnStart =  toff(round(turnStartTime/eset.expt.elapsedTime(2)));
+	
+	3. Hopefully right
+	turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start')
+
+field: for all tracks
+
+subfield: for certain track, like run, reorientation, or headSwing
+
+External stimulation: eset.expt.globalQuantity.fieldname
+
+Clone Track-Extraction-Software and Matlab-Track-Analysis to the same folder, because function process_mmfs_gershow needs to call extract-stack.exe in Track-Extraction-Software folder. Also if these folders are not in C drive, they should under Apps-SU to run .exe program.
+
+processing_params_paulsmall.m defines extraction_settings.bxx with minArea as 10 pixels, and overallThreshold 20 pixels different from default extraction parameters. To use it, just include it as an extra parameters when running process_mmfs_gershow.m.
+The default setting of extraction is saved in Track-Extraction-Software\WindowsBinaries\extract-stack.exe. You can find it if running .\extract-stack.exe under its directory in Windows PowerShell.
+
+When running process_MMF.m @Yiming, CMD will pop up. When it shows 'finished!', the first autoprocess is finished.
+
+When collecting data, for the experiments without all files saved, the process_MMF will ingnore the incomplete folder.
+
+processMMF needs half of experiment time, and processBIN needs double experiment time.

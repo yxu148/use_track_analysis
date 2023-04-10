@@ -1,0 +1,6 @@
+function name_of_function (input_parameter)
+	It makes the file callable by running name_of_function (input_parameter).
+savepath
+	After addpath, run it to save paths to Matlab, so that no need to addpath later.
+doc method_name
+	to call help for the method or class
