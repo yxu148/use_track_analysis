@@ -1,8 +1,16 @@
 
+
+% scale info
+len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
+
+% correspond track to larva in video
+eset.expt.track(1).pt(1).loc  % location (cm) of the first track at the first frame, 2*1 coloumn vector
+camPtsFromRealPts(eset.expt.camcalinfo, eset.expt.track(1).pt(1).loc)  % change the location in cm to location in pixels, so you can find it from MMF opened in ImageJ
+
 vh = eset.expt(1).track(1).getDerivedQuantity('vhead');  % velocity of the head, vector
 vt = eset.expt(1).track(1).getDerivedQuantity('vtail');  % velocity of the tail
 tx = eset.expt(1).track(1).getDerivedQuantity('eti');  % time
-ih = eset.expt(1).track(1).getDerivedQuantity('ihead');  % x and y pos of the head
+ih = eset.expt(1).track(1).getDerivedQuantity('ihead');  % x and y pos of the head, in cm
 it = eset.expt(1).track(1).getDerivedQuantity('itail');  % x and y pos of the tail
 % tderiv = 0.9;  % defines derivative time
 % vh = deriv(ih, tderiv/eset.expt(1).dr.interpTime); 
@@ -35,6 +43,10 @@ end
 rbefore = nturnbefore./tbefore;  % rate of turn
 rafter = nturnafter./tafter;
 xx = [zeros(size(rbefore)); ones(size(rafter))];
-plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel('Before 0 and after 1');
+plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel('Before 0 and after 1');\
+
+
+% plot video
+eset.expt.track(1).playMovie()
 
 
