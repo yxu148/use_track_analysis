@@ -1,4 +1,4 @@
 # ignore files
 
-# untrack autosave file
-.asv
+# untrack autosave files
+*.asv
