@@ -2,16 +2,17 @@
 % Run it at the first time
 % setupDirectories('Ruben');
 
-startdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability'; % Start folder, contains data from experiments ---------------
+startdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary'; % Start folder, contains data from experiments ---------------
 % startdir2 = ...
 
-outputdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_extracted_small'; % Extracted folder, contains data after extraction, must exist ---------------
+outputdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary_extracted'; % Extracted folder, contains data after extraction, must exist ---------------
 
-extraparams = {{'processing_params', processing_params_paulsmall},{},{}};  % pass the paulsmall extraction setting to the first start folder
+% extraparams = {{'processing_params', processing_params_paulsmall},{},{}};  % pass the paulsmall extraction setting to the first start folder
+extraparams = {{},{},{}};
 
 % start a log file to record
 logname = "processMMF" + datestr(now, 'yyyy-mm-dd')+ ".txt";  % doesn't exist before diary()
-logpath = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_process_logs';  % this folder must exist ---------------
+logpath = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary_process_logs';  % this folder must exist ---------------
 pathname = fullfile(logpath, logname);
 diary(pathname);
 disp(datestr(now));

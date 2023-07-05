@@ -1,0 +1,15 @@
+function name_of_function (input_parameter)
+	It makes the file callable by running name_of_function (input_parameter).
+If there is varargin defined in the function, calling the function is different from that in python. You need to use ('parameter_name', parameter_value) instead of (parameter_name = parameter_value)
+savepath
+	After addpath, run it to save paths to Matlab, so that no need to addpath later.
+doc method_name
+	to call help for the method or class
+
+
+% To read BIN file:
+fileID = fopen('filename.bin')
+A = fread(fileID)
+A
+fclose(fileID)
+

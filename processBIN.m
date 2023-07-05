@@ -22,7 +22,7 @@ if isempty(poolobj)
 else
     closepool = false;
 end
-verbose = false;
+verbose = true;
 
 %{
 %processLoops(startdir1,outputdir);  
