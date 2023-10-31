@@ -24,7 +24,7 @@ for j = 1 : ntracks
 end
 xlabel(ax(1),'Time in Period (s)'); ylabel(ax(1), 'Head Swing Rate (per min)');
 sgtitle(['Step size is ', num2str(stepsize), ', bin size is ', num2str(binsize)]);
-savename = strcat(basedir,'\results10', '\rate_headSwing');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_headSwing');
 savefig(gcf, savename); 
 
 
@@ -41,8 +41,8 @@ for j=1:ntracks
     %ylim([0, 12]);  % unitify the y axis range to compare easily
 end
 xlabel(ax(1),'Head Swing Start Time in Period (s)'); ylabel(ax(1), 'Count');  % label the first plot
-savename = strcat(basedir,'\results10', '\num_headSwing');
-savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results10
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_headSwing');
+savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results_202308121650
 % saveas(gcf, savename, 'png');  % run after insert texts
 
 
@@ -57,7 +57,7 @@ for j = 1 : ntracks
     histogram(HSrejStart, 0:tbin:tperiod); title(['Track ', num2str(t(j).trackNum)]);
 end
 xlabel(ax(1),'Rejected Head Swing Start Time in Period (s)'); ylabel(ax(1), 'Count');
-savename = strcat(basedir,'\results10', '\num_headSwingRej');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_headSwingRej');
 savefig(gcf, savename); 
 
 
@@ -78,7 +78,7 @@ for j = 1 : ntracks
 end
 xlabel(ax(1),'Time in Period (s)'); ylabel(ax(1), 'Reorientation Rate (per min)');
 sgtitle(['Step size is ', num2str(stepsize), ', bin size is ', num2str(binsize), ', (Number of Stimulation, Number of Turn)']);
-savename = strcat(basedir,'\results10', '\rate_turn_ton');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton');
 savefig(gcf, savename); 
 % saveas(gcf, savename, 'png');
 
@@ -104,7 +104,7 @@ for j = 1 : ntracks
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Start Turning'); 
 sgtitle('(Number of Stimulation, Number of Turn)');
-savename = strcat(basedir,'\results10', '\p_turn_no_pause_ton');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_ton');
 savefig(gcf, savename); 
 
 
@@ -136,7 +136,7 @@ for j = 1 : length(t)
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
 sgtitle([num2str(i), '-th intensity of stimulation (Number of Stimulation, Number of Turn)']);
-savename = strcat(basedir,'\results10', '\p_turn_ton_no_pause_', num2str(i));
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_ton_no_pause_', num2str(i));
 savefig(gcf, savename); 
 
 
@@ -164,16 +164,16 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
         ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
         [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
         bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-        if N/nperiod > ymax
-            ymax = N/nperiod;
+        if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
+            ymax = max(N/nperiod);
         end
-        xticks(edges);    ylim([0, 0.55]);  % comment ylim first, change to ymax at the second run ----------------
+        xticks(edges);    ylim([0, 0.8]);  % comment ylim first, change to ymax at the second run ----------------
         title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
     end
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
 sgtitle('(Number of Stimulation, Number of Turn)');
-savename = strcat(basedir,'\results10', '\p_turn_no_pause_all');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all');
 savefig(gcf, savename); 
 
 
@@ -191,8 +191,8 @@ for j=1:ntracks
     %ylim([0, 12]);  % unitify the y axis range to compare easily
 end
 xlabel(ax(1),'Reorientation Start Time in Period (s)'); ylabel(ax(1), 'Count');  % label the first plot
-savename = strcat(basedir,'\results10', '\num_turn');
-savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results10
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_turn');
+savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results_202308121650
 % saveas(gcf, savename, 'png');  % run after insert texts
 
 % Histogram of probability difference before and after stimulation
@@ -209,18 +209,18 @@ for j = 1 : ntracks
     increase_p(j) = (N(1) - (N(5) + N(6))/2) / nperiod;  % increasement of turn probability is the first bin after stimulation minus the average of [12s, 18s].
     abs_p(j) = N(1) / nperiod;
 end
-savename = strcat(basedir,'\results10', '\data');  % save in file data.mat
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data');  % save in file data.mat
 save(savename, 'increase_p');  % if data.mat not exist, create one, otherwise overwrite all.
 save(savename, 'abs_p', '-append');  % data.mat has to exist, append new variable abs_p, or overwrite abs_p.
 figure;
 histogram(increase_p, [-0.5: 0.1: 1]); xlabel('Probability Increasement After Stimulation'); ylabel('Number of Tracks');
 title([num2str(ntracks), ' Tracks Longer Than ', num2str(nperiods),  ' Periods with Bin Edges ', num2str(edges)]);
-savename = strcat(basedir,'\results10', '\diff_p_turn_1');  % no . in name of file
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\diff_p_turn_1');  % no . in name of file
 savefig(gcf, savename);
 figure;
 histogram(abs_p, [0: 0.1: 1]); xlabel('Probability of Turn within the first 3 s of Stimulation'); ylabel('Number of Tracks');
 title([num2str(ntracks), ' Tracks Longer Than ', num2str(nperiods),  ' Periods']);
-savename = strcat(basedir,'\results10', '\abs_p_turn_1');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\abs_p_turn_1');
 savefig(gcf, savename); 
 
 
@@ -232,12 +232,12 @@ nperiod = sum(eset.expt.elapsedTime(eset.gatherField('npts'))) / tperiod;  % tot
 figure;
 histogram(turnStart, 0:1:tperiod);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Count'); title('All tracks');
-savename = strcat(basedir,'\results10', '\num_turn_all');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_turn_all');
 savefig(gcf, savename); 
 
 
 % turn rate of all tracks at a certain period of time
-figure;
+figure; t = eset.expt.track;
 stepsize = 0.1; binsize = 0.5;
 % only keep the reorientation whose start time falls into the i-th intensity of stimulation
 for i = 1: length(t_stim_start)
@@ -264,8 +264,14 @@ for i = 1: length(t_stim_start)
     title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
 end
 sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,'\results10', '\rate_turn_period_no_pause');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_period_no_pause');
 savefig(gcf, savename); 
+
+
+
+
+
+
 
 % Changing of average turn rate (including pause)
 stepsize = 0.1; binsize = 0.5; frame_rate = 20;
@@ -296,7 +302,7 @@ plot((t_rate_start +  t_rate_end)/2/60, turnrate_array, 'o-');
 text((t_rate_start +  t_rate_end)/2/60 + 1, turnrate_array, string(nperiod_array));
 xlabel('Time (min)'); ylabel('Reorientation Rate (per min)'); 
 title(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,'\results10', '\rate_turn_changing_1h_includ_pause');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_changing_1h_includ_pause');
 savefig(gcf, savename); 
 
 
@@ -323,14 +329,14 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,'\results10', '\rate_turn_all_ton_only_pause'); %------------
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_ton_only_pause'); %------------
 savefig(gcf, savename); 
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
 turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
 nperiod_array_1 = nperiod_array;
-savename = strcat(basedir,'\results10', '\data_avg_turn_rate.mat');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data_avg_turn_rate.mat');
 save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
 save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 load(savename)
@@ -343,7 +349,7 @@ figure;
 plot (tx, fracinrun, 'r');  xline(10, '--'); 
 xlabel('Time (s)');
 ylabel('Fraction in run for all tracks');
-savename = strcat(basedir,'\results10', '\frac_run_toff');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\frac_run_toff');
 savefig(gcf,savename);
 
 
@@ -358,7 +364,7 @@ for j = 1:5
     xlabel('Time (s)'); ylim([5, 18]); title(['Track ', num2str(t(j).trackNum)]);  %--------------------------------
 end
 sgtitle('Raw Data of Reorientation Start Time and Stimulation');
-savename = strcat(basedir,'\results10', '\raw_turn');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\raw_turn');
 savefig(gcf, savename); 
 % saveas(gcf, savename, 'png');
 
@@ -370,7 +376,7 @@ for j = 1: length(eset.expt.track)
         plot(eset.expt.track(j).endFrame, j, 'rx'); hold on;
 end
 xlabel('Frame number'); ylabel('Index of tracks'); hold off;
-savename = strcat(basedir,'\results10', '\track_start_end');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_start_end');
 savefig(gcf, savename); 
 
 
@@ -385,7 +391,7 @@ for j = 1:length(eset.expt.track)
 end
 figure; plot(ntracks_frame);
 xlabel('Frame number'); ylabel('Number of recognized maggots');
-savename = strcat(basedir,'\results10', '\num_maggots_recognized');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_maggots_recognized');
 savefig(gcf, savename); 
 
 
@@ -401,20 +407,55 @@ width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read 
 height = 2048;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-track_path = [12, 13, 14, 15];  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
-figure;
+track_path = [1, 3, 11, 12, 14];  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
+figure; 
+eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
     eset.expt.track(track_path(i)).plotPath('sloc', color_pad(i));   hold on;  % 
     plot(eset.expt.track(track_path(i)).pt(1).loc(1), eset.expt.track(track_path(i)).pt(1).loc(2), append('o', color_pad(i)));  % o marks start
     plot(eset.expt.track(track_path(i)).pt(end).loc(1), eset.expt.track(track_path(i)).pt(end).loc(2), append('x', color_pad(i)));  % x marks end
 end
 rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
+axis equal;  % use the same length for data unit
 title(['Path of tracks ', num2str(track_path), ', with color ', color_pad(1: length(track_path)) ]); xlabel('x (cm)'); ylabel('y (cm)'); hold off;
-savename = strcat(basedir,'\results10', '\stitch_paths_1');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_1');
 savefig(gcf, savename); 
 
 
-% each row will be stitched to a single track
-stitch_info = [3, 18; 4, 15; 5, 13];  % track index of what to stitch
-
+% tracks in each cell will be stitched to a single track
+stitch_info = {[11, 13], [3, 9], [4, 5, 8]};
+edge_info = [];
+figure;
+tbin = 3;  edges = [0:tbin: tperiod];
+%edges = [0,4,7,10,13,16,20];
+xbar = edges(1: numel(edges)-1) + diff(edges)/2;
+ymax=0;
+for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
+    for j = 1 : length(t)
+        % 'led2Val_ton' fails some time if stimulation isn't strict square wave
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+        turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
+    % 	turnStart = mod(turnStartTime, tperiod);  % in period
+        %number of period of stimulation that falls into certain intensity
+        t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+        t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+        nperiod = (t_end - t_start) / tperiod;
+%         index_subplot = j*length(t_stim_start) - (length(t_stim_start)-i);  % to plot by column
+%         ax(index_subplot) = subplot(length(t), length(t_stim_start), index_subplot);
+        index_subplot = j + (i-1)*length(t);
+        ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
+        [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
+        bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
+        if N/nperiod > ymax
+            ymax = N/nperiod;
+        end
+        xticks(edges);    ylim([0, 0.75]);  % comment ylim first, change to ymax at the second run ----------------
+        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
+    end
+end
+xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
+sgtitle('(Number of Stimulation, Number of Turn)');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all');
+savefig(gcf, savename); 
 
