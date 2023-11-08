@@ -164,10 +164,10 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
         ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
         [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
         bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-        if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
+        if max(N/nperiod) > ymax
             ymax = max(N/nperiod);
         end
-        xticks(edges);    ylim([0, 0.8]);  % comment ylim first, change to ymax at the second run ----------------
+        xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
         title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
     end
 end
@@ -422,7 +422,7 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_
 savefig(gcf, savename); 
 
 
-% tracks in each cell will be stitched to a single track
+% tracks in each cell will be stitched to a single track, not finished yet
 stitch_info = {[11, 13], [3, 9], [4, 5, 8]};
 edge_info = [];
 figure;
@@ -458,4 +458,24 @@ xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to T
 sgtitle('(Number of Stimulation, Number of Turn)');
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all');
 savefig(gcf, savename); 
+
+
+% Find the collision location and time, and save collision_events [track_1, x1, y1, t1; track_1, x2, y2, t2; ...] in units of pixels and frames
+stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened
+collision_events = [];  % [track_ID, x, y, t] in units of pixels and frames
+for j = 1 : length(stitched_track_index)  % loop all stitched tracks
+    
+    frames_collision = find(eset.expt.track(stitched_track_index(j)).iscollision);  % frames that collision is in progress
+    frame_collision_start = frames_collision([true, diff(frames_collision) ~= 1]);  % [collision 1 start frame, collision 2 start frame, ...]
+    frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);
+    loc_collision_start_cm = [eset.expt.track(1).pt(frame_collision_start).loc];  % [collision 1 start x, collision 2 start x, ... ; collision 1 start y, collision 2 start y, ...] in cm
+    loc_collision_start_pixel = camPtsFromRealPts(eset.expt.camcalinfo, loc_collision_start_cm);  % [x1, x2, ...; y1, y2, ...] in pixel
+    % collision event(s) for this single track, [track_1, x1, y1, t1; track_1, x2, y2, t2; ...]
+    collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(loc_collision_start_pixel), transpose(frame_collision_start)];
+    collision_events = [collision_events; collision_event];  % combine collision events of different tracks together
+end
+collision_events = fix(collision_events);  % change from double to integer
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+save(savename, 'collision_events')  % run this at the first time to create new saving file
+% save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 
