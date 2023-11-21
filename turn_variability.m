@@ -310,7 +310,7 @@ savefig(gcf, savename);
 figure; eset.makeReorientationHistogram('led2Val_toff', 0:stepsize:tperiod);
 
 % turn rate of all tracks
-figure;
+figure;  t = eset.expt.track;
 stepsize = 0.1; binsize = 0.5;
 % turnStartTime =  eset.expt.track.getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % time (s) not in period
 % turnStart = mod(turnStartTime, tperiod);  % in period
@@ -412,8 +412,9 @@ figure;
 eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
     eset.expt.track(track_path(i)).plotPath('sloc', color_pad(i));   hold on;  % 
-    plot(eset.expt.track(track_path(i)).pt(1).loc(1), eset.expt.track(track_path(i)).pt(1).loc(2), append('o', color_pad(i)));  % o marks start
-    plot(eset.expt.track(track_path(i)).pt(end).loc(1), eset.expt.track(track_path(i)).pt(end).loc(2), append('x', color_pad(i)));  % x marks end
+    xy_s = eset.expt.track(track_path(i)).getDerivedQuantity('sloc');
+    plot(xy_s(1, 1), xy_s(2, 1), append('o', color_pad(i)));  % o marks start
+    plot(xy_s(1, end), xy_s(2, end), append('x', color_pad(i)));  % x marks end
 end
 rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
 axis equal;  % use the same length for data unit
