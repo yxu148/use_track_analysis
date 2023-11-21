@@ -56,7 +56,10 @@ eset.expt(1).elapsedTime([t(1).reorientation.startInd]).
 
 t(1).startFrame is right.
 
+xy = eset.expt.track(11).getDerivedQuantity('sloc');
 
+The merge.m in class Track cannot merge properties run, reorientation and so on. Also I don't konw how to create a new track. Thus, I give up to merge tracks fully, only combine the turn time of multiple tracks.
+In my merge_new.m, the trackNum cannot be modified likely.
 
 
 
@@ -101,4 +104,14 @@ Therefore, delete the first one and analyze again.
 
 When starting acquization, the region of interest (ROI) will shrink. This is only how it looks like. Actually the ROI is the initial square you created.
 
-Run 'begin experiment' in led control panel every time before experiment to check what bin files are uploaded. The bin files uploaded last time probably are saved.
+Run 'begin experiment' in led control panel every time before experiment to check what bin files are uploaded. The bin files uploaded are saved, but cannot be used again.
+The led2Val often doesn't corresponding to the BIN file I transferred. 2 consecutive experiments (only transfer bin files once) could fail differently. Also there is case the first experiment fails but the second succeeds.
+Transferring from the local drive doesn't solve the problem.
+After directly reading from SD card, I found, in once case, the BIN files in SD card is right, but LEDs don't light up according to the BIN files.
+There is other case that the BIN files in SD card are wrong.
+
+All data collected during the week of Oct 23, and Oct 30, BIN files are generated right, but the transfer goes wrong. I only transfered once, thus all went wrong.
+Everytime when transfer, do a test experiment first to record empty video. Then plot from the 2 BIN files output from LabVIEW to test the transfer went well.
+If it went well, don't close the front panel, so that the transferred BIN file is the same.
+
+On the same PC, if the first person's account is opening the 'coordinated led control panel.vi', other people cannot use it. Close the LabVIEW panels before sign out.
