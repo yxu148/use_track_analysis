@@ -73,7 +73,7 @@ for i = 1:length(startdirs)
    % processingOptions = {'trimrectpixels', [10 10 2582 1934]}; 
    % CHANGED 2/7/2015 by MHG to not trim tracks
 %     processingOptions = {'trimrect', [], 'trimrectpixels',[],'buffer', [],'ccInSupDataDir', true}; %no trimming!
-% Default 'frameDiff' is 7, default 'maxDist' is 0.1 (cm)
+% Default 'frameDiff' is 7, default 'maxDist' is 0.1 (cm)---------
     processingOptions = {'trimrect', [], 'trimrectpixels',[],'buffer', [],'ccInSupDataDir', true, 'frameDiff', 1000, 'maxDist', 0.3};
     for j = 1:length(dstdirs)
 %         if (any(strcmpi(dstdirs{j}, processingProblems)))
