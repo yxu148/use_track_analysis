@@ -407,7 +407,7 @@ width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read 
 height = 2048;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-track_path = [1, 3, 11, 12, 14];  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
+track_path = stitched_track_index(1 : 5);  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
 figure; 
 eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
@@ -415,6 +415,8 @@ for i = 1 : length(track_path)  %  The index of track to plotPath, should be sho
     xy_s = eset.expt.track(track_path(i)).getDerivedQuantity('sloc');
     plot(xy_s(1, 1), xy_s(2, 1), append('o', color_pad(i)));  % o marks start
     plot(xy_s(1, end), xy_s(2, end), append('x', color_pad(i)));  % x marks end
+    collisions_index = find(collision_events(:, 1) == track_path(i));  % find the row index of collisions in one track from collision events
+    plot(collision_events(collisions_index, 5), collision_events(collisions_index, 6), append('>', color_pad(i)));
 end
 rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
 axis equal;  % use the same length for data unit
@@ -461,21 +463,21 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pau
 savefig(gcf, savename); 
 
 
-% Find the collision location and time, and save collision_events [track_1, x1, y1, t1; track_1, x2, y2, t2; ...] in units of pixels and frames
-stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened
-collision_events = [];  % [track_ID, x, y, t] in units of pixels and frames
+% Find the collision location and time, and save collision_events [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
+stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened, whose nt(number of tracks) ~= 1.
+collision_events = [];  % [track_ID, x(pixel), y(pixel), t(frame), x(cm), y(cm)] in units of pixels and frames
 for j = 1 : length(stitched_track_index)  % loop all stitched tracks
     
     frames_collision = find(eset.expt.track(stitched_track_index(j)).iscollision);  % frames that collision is in progress
     frame_collision_start = frames_collision([true, diff(frames_collision) ~= 1]);  % [collision 1 start frame, collision 2 start frame, ...]
-    frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);
-    loc_collision_start_cm = [eset.expt.track(1).pt(frame_collision_start).loc];  % [collision 1 start x, collision 2 start x, ... ; collision 1 start y, collision 2 start y, ...] in cm
+    frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);  % this collision end frame will be off a lot
+    loc_collision_start_cm = [eset.expt.track(stitched_track_index(j)).pt(frame_collision_start).loc];  % [collision 1 start x, collision 2 start x, ... ; collision 1 start y, collision 2 start y, ...] in cm
     loc_collision_start_pixel = camPtsFromRealPts(eset.expt.camcalinfo, loc_collision_start_cm);  % [x1, x2, ...; y1, y2, ...] in pixel
-    % collision event(s) for this single track, [track_1, x1, y1, t1; track_1, x2, y2, t2; ...]
-    collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(loc_collision_start_pixel), transpose(frame_collision_start)];
+    % collision event(s) for this single track, [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
+    collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(loc_collision_start_pixel), transpose(frame_collision_start), transpose(loc_collision_start_cm)];
     collision_events = [collision_events; collision_event];  % combine collision events of different tracks together
 end
-collision_events = fix(collision_events);  % change from double to integer
+% collision_events = fix(collision_events);  % change from double to integer
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 save(savename, 'collision_events')  % run this at the first time to create new saving file
 % save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
