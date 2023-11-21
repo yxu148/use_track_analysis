@@ -7,8 +7,8 @@ startdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary'; % Start 
 
 outputdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary_extracted'; % Extracted folder, contains data after extraction, must exist ---------------
 
-% extraparams = {{'processing_params', processing_params_paulsmall},{},{}};  % pass the paulsmall extraction setting to the first start folder
-extraparams = {{},{},{}};
+extraparams = {{'processing_params', processing_params_paulsmall},{},{}};  % pass the paulsmall extraction setting to the first start folder
+% extraparams = {{},{},{}};
 
 % start a log file to record
 logname = "processMMF" + datestr(now, 'yyyy-mm-dd')+ ".txt";  % doesn't exist before diary()
