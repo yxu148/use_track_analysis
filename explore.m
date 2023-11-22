@@ -19,11 +19,17 @@ figure; plot(C, 'k');
 
 
 % coordinate property of maggots
+eset.expt.track(11).validDQName;  % will return all valid derived quantity names
+% the derived quantities are saved in eset.expt.track(11).dq after calling getDerivedQuantity for the first time
+% the derived quantities have the full length, which means some points are made up if some information is lost.
+xy_s = eset.expt.track(11).getDerivedQuantity('sloc');  % smoothed location, [x1, x2, ... ; y1, y2, ...] in cm, use a lowpass Gaussian filter to smooth
+xy_i = eset.expt.track(11).getDerivedQuantity('iloc');  % interpolated location, [x1, x2, ...; y1, y2, ...] in cm, use linear interp function to insert missing points.
 vh = eset.expt(1).track(1).getDerivedQuantity('vhead');  % velocity of the head, vector
 vt = eset.expt(1).track(1).getDerivedQuantity('vtail');  % velocity of the tail
 tx = eset.expt(1).track(1).getDerivedQuantity('eti');  % time
 ih = eset.expt(1).track(1).getDerivedQuantity('ihead');  % x and y pos of the head, in cm
 it = eset.expt(1).track(1).getDerivedQuantity('itail');  % x and y pos of the tail
+iiscollede = eset.expt.track(2).getDerivedQuantity('iiscollision');  % interpolated iscollision
 % tderiv = 0.9;  % defines derivative time
 % vh = deriv(ih, tderiv/eset.expt(1).dr.interpTime); 
 % vt = deriv(it, tderiv/eset.expt(1).dr.interpTime);  % new calculations of the head and tail velocities
@@ -111,7 +117,7 @@ savename = strcat(basedir,'\results1', '\num_maggots_recognized');
 savefig(gcf, savename); 
 
 
-% geometry of Region of Interest (ROI) read from Image Recorder front panel
+% size of Region of Interest (ROI) read from Image Recorder front panel
 width = 2048;  % in pixel, in x-axis
 height = 2048;  % in pixel, in y-axis
 % scale info
@@ -144,7 +150,8 @@ savename = strcat(basedir,'\results10', '\stitch_paths');
 savefig(gcf, savename); 
 
 
-
+figure;
+eset.expt.track(2).plotPath('sloc', 'highlightinds', 'iscollision')
 
 
 
