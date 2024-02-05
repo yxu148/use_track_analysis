@@ -69,8 +69,14 @@ plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel
 
 % plot video, is running the function in @MaggotTrack
 % time in second, frameRate default to be 20 Hz,
-figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 0, 'stopTime', 10)
-
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 0, 'stopTime', 30)
+% For now always indicate 'vidObj' to be able to view the video.
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\video');
+videoObject = VideoWriter(savename);
+open(videoObject);
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 0, 'stopTime', 5, 'vidObj', videoObject)
+close(videoObject);
+stitched_tracks = find([eset.expt.track.nt] ~=1);  % indexes of stitched tracks
 
 % Check collision time for each track, this is collision without breaking
 % track (seperate automatically by software)
@@ -102,8 +108,8 @@ xlabel('Time (s)'); ylabel('Index of tracks'); hold off;
 savename = strcat(basedir,'\results2', '\track_time');
 savefig(gcf, savename); 
 
-% plot the number of recognized maggots verses frame. Maggots in collision,
-% out of ROI, or discarded by many different tests in processBIN won't be recognized.
+% Number of recognized maggots - frame. 
+% Maggots in collision, out of ROI, or discarded by many different tests in processBIN won't be recognized.
 ntracks_frame = zeros(1, length(eset.expt.elapsedTime));
 start_frame_tracks = [eset.expt.track.startFrame] + 1;  % min is 1
 end_frame_tracks = [eset.expt.track.endFrame] + 1;
