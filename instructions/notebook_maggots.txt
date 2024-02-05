@@ -61,6 +61,8 @@ xy = eset.expt.track(11).getDerivedQuantity('sloc');
 The merge.m in class Track cannot merge properties run, reorientation and so on. Also I don't konw how to create a new track. Thus, I give up to merge tracks fully, only combine the turn time of multiple tracks.
 In my merge_new.m, the trackNum cannot be modified likely.
 
+The video won't play without saving when running playMovie(). For now, saving the video every time to solve this issue temporally.
+
 
 
 
