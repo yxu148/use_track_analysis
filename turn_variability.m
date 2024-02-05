@@ -307,7 +307,7 @@ savefig(gcf, savename);
 
 
 % turn rate of all tracks
-figure; eset.makeReorientationHistogram('led2Val_toff', 0:stepsize:tperiod);
+figure; eset.makeReorientationHistogram('led1Val_ton', 0:stepsize:tperiod);
 
 % turn rate of all tracks
 figure;  t = eset.expt.track;
@@ -318,7 +318,7 @@ stepsize = 0.1; binsize = 0.5;
 % get the turnStart with some constraints
 turnStart = [];
 for i = 1: length(t)  % when include indsExpression in function getSubFieldDQ, cannot get quantities for all tracks
-    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] == 0', 'position', 'start');  %-----------------
+    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
 %     turnStartTime_single =  t(i).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 0', 'position', 'start');
 %     turnStart_single = mod(turnStartTime_single, tperiod);  % in period
     turnStart = [turnStart turnStart_single];
@@ -329,8 +329,12 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_ton_only_pause'); %------------
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_ton_no_pause'); %------------
 savefig(gcf, savename); 
+
+
+eset.expt.track(1).dq.speed
+v = t(1).getSubFieldDQ('run', 'speed', 'mean'); plot(v);
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
@@ -407,7 +411,7 @@ width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read 
 height = 2048;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-track_path = stitched_track_index(1 : 5);  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
+track_path = stitched_track_index(7 : end);  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
 figure; 
 eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
