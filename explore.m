@@ -6,10 +6,10 @@ led2Val_high = eset.gatherField('led2Val_high');  % 1 for high, 0 for low of Blu
 led2Val_ton = eset.gatherField('led2Val_ton');  % 1 for high, 0 for low of Blue Light intensity (PWM) of LED at each frame
 
 % To read BIN file:
-fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202310251024\Gr21a@Chrimson(3)_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202310251024 led1 values.bin');
+fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\test\NA@NA\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202311220944\NA@NA_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202311220944 led1 values.bin');
 A = fread(fileID);
 fclose(fileID);
-fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202310251024\Gr21a@Chrimson(3)_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202310251024 led2 values.bin');
+fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\test\NA@NA\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202311220944\NA@NA_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202311220944 led2 values.bin');
 B = fread(fileID2);
 fclose(fileID2);
 figure; plot(A, 'r'); hold on; plot(B, 'b'); hold off;

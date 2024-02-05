@@ -1,8 +1,8 @@
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_2_3#T_Bl_Sq_2,5to6P_20_1_3'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3'
     };
 x_cell = {
-    [24]
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     %[25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
 
@@ -36,7 +36,7 @@ end
 tperiod = 20;
 nperiods = 69;  % select tracks that have [nperiods, Nperiods] length
 Nperiods = 91;
-download = false;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
+download = true;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     basedir = basedir_cell{folder_index};
@@ -52,7 +52,9 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         inds_led2Val = find(strcmpi('led2Val', {esets.(eset_name).expt(k).globalQuantity.fieldname}));
         xdata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).xData; 
         ydata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).yData + esets.(eset_name).expt(k).globalQuantity(inds_led2Val).yData;
-        ydata(1:12e3) = ydata(1:12e3) + 100;  % this is to make the square wave fluctruate around a center quantity
+        % ydata(1:12e3) = ydata(1:12e3) + 100;  % this is to make the square wave fluctruate around a center quantity
+        ydata(12e3:18.96e3) = ydata(12e3:18.96e3) + 100;
+        ydata(30.96e3:end) = ydata(30.96e3:end) + 100;
         esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata)
         led12Val = esets.(eset_name).expt(k).gatherField('led12Val');
         esets.(eset_name).expt(k).addTonToff('led12Val', 'square');
@@ -110,10 +112,10 @@ end
 
 
 download = true;  % always plot, if download true, save; if false, don't save.
-t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
-t_stim_end = [600, 1200, 1800];
+t_stim_start = [0, 600, 948];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 948, 1548];
 frame_rate = 20;  % number of frames per second
-plot_pturn = false;  
+plot_pturn = true;  
 tbin = 3;  edges = [0:tbin: tperiod];
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;

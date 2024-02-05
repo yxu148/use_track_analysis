@@ -425,7 +425,7 @@ end
 rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
 axis equal;  % use the same length for data unit
 title(['Path of tracks ', num2str(track_path), ', with color ', color_pad(1: length(track_path)) ]); xlabel('x (cm)'); ylabel('y (cm)'); hold off;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_1');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_2');
 savefig(gcf, savename); 
 
 

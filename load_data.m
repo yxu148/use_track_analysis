@@ -1,8 +1,8 @@
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_2_3#T_Bl_Sq_2,5to6P_20_1_3';  % ---------------------------
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3';  % ---------------------------
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 % reload experiment from mat files, called experiment set (eset), belong to @ExperimentSet object
 disp('Loading data...');
-x = [5];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
+x = [14];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
 pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
@@ -22,7 +22,7 @@ end
  
 disp('Sorting tracks into run, reorientation, and headswing...');
 eset.executeTrackFunction('segmentTrack')
-v_mean = 60 * mean([eset.expt(1).track.getSubFieldDQ('run', 'speed', 'position', 'mean')]);
+v_mean = 60 * mean([eset.expt.track.getSubFieldDQ('run', 'speed', 'position', 'mean')]);
 disp(['Mean run speed of this group is ', num2str(v_mean), ' cm/min'])
 mkdir(fullfile(basedir, ['results', d(x).name(end-16:end-4)]));  % auto name after date of expt, e.g. results_202309141250
 
@@ -41,7 +41,7 @@ inds_led1Val = find(strcmpi('led1Val', {eset.expt.globalQuantity.fieldname}));
 inds_led2Val = find(strcmpi('led2Val', {eset.expt.globalQuantity.fieldname}));
 xdata = eset.expt(1).globalQuantity(inds_led1Val).xData; 
 ydata = eset.expt(1).globalQuantity(inds_led1Val).yData + eset.expt(1).globalQuantity(inds_led2Val).yData;
-ydata(1:12e3) = ydata(1:12e3) + 100;  % this is to make the square wave fluctruate around a center quantity
+ydata(12e3:24e3) = ydata(12e3:24e3) + 100;  % this is to make the square wave fluctruate around a center quantity
 eset.expt(1).addGlobalQuantity('eti', 'led12Val', xdata, ydata)
 led12Val = eset.gatherField('led12Val');
 
@@ -50,7 +50,7 @@ ton = eset.gatherField('led12Val_ton');  % get all values of 'led2Val_on' for al
 % return a k-N array of values, where N is total number of points, k is the dimension of the values of fieldname 'led2Val_off'
 toff= eset.gatherField('led12Val_toff'); 
 % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
-figure; t_end = 36e3-10;
+figure; t_end = 24e3-10;
 plot(eset.expt(1).elapsedTime(1 : t_end)/60, led1Val(1:t_end), 'r'); hold on;
 plot(eset.expt(1).elapsedTime(1 : t_end)/60, led2Val(1:t_end), 'b'); hold on;
 plot(eset.expt(1).elapsedTime(1:t_end)/60, toff(1:t_end), 'k'); hold on;
@@ -67,7 +67,7 @@ tperiod = 20;  % depend on the name of .mat file loaded, '_18_', or from the plo
 disp(['Time for one frame is ', num2str(eset.expt.elapsedTime(2)), ' s']);
 Ntracks = size(eset.expt(1).track);  % 1-by-Number_of_Tracks ( number of maggots)
 figure;
-histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), [0:10:90]);  % round 60.001 to 60
+histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), [0:10:60]);  % round 60.001 to 60
 xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(eset.expt(1).track)), ' Tracks']);
 pause;
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_length');
@@ -75,7 +75,7 @@ savefig(gcf,savename);
 close;
 
 
-nperiods = 69;  % select tracks that have [nperiods, Nperiods] length
+nperiods = 69;  % select tracks that have [nperiods, Np eriods] length
 Nperiods = 91;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
 disp(['After filtering out tracks within [', num2str(nperiods), ', ', num2str(Nperiods), '] periods']);
 t = eset.expt.track;
