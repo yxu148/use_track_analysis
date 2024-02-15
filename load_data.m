@@ -32,9 +32,10 @@ GQled1Val = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}
 GQled2Val = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led2Val'}));
 
 % create a new globalquantity which is square wave across the whole experiment time
-ydata(12e3:24e3) = ydata(12e3:24e3) + 100;  % this is to make the square wave fluctruate around a center quantity
 xdata = GQled2Val.xData;  % xdata of all Global Quantity ledVals should be the same
 ydata = GQled1Val.yData + GQled2Val.yData;  % LED intensity in PWM
+index = find(GQled1Val.yData==0, 1, 'last');  % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
+ydata(1:index) = ydata(1:index) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
 eset.expt(1).addGlobalQuantity('eti', 'led12Val', xdata, ydata);  % create a man-made global field to add ton/toff
 eset.expt(1).addTonToff('led12Val', 'square');  % create time on/off field based a global quantity fieldname 'led2Val'
 GQton = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led12Val_ton'}));
