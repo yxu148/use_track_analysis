@@ -19,20 +19,21 @@ Three ways to get time of start to turn in period:
 	3. Hopefully right
 	turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start')
 
-field: for all tracks
+field: quantity along the whole duration of track(s)
 
-subfield: for certain track, like run, reorientation, or headSwing
+subfield: quantity along part of track(s), like run, reorientation, or headSwing
 
 External stimulation: eset.expt.globalQuantity.fieldname
 
 When analyzing 'CS@NA\T_Bl_10s_on_10s_off_Sq_0to250_20_10_50_250uWcm2', I think the value 'led2Val' is wrong because the length is longer.
-Also 'eset.expt.addTonToff('led2Val', 'square');' fails to addTonToff, I guess because the stimulation is not pure square wave, there are constant gaps between square wave.
+Also 'eset.expt.addTonToff('led2Val', 'square');' fails to addTonToff, I guess because the stimulation is not pure square wave, there are constant gaps between square wave. Yes, it's right.
 
 Does reorientation also include pause? Yes. The track is divided into 'run' and 'reorientation'
 
 getSubFieldDQ doesn't work with inds or ind--------------------
 eset.expt.track(3).getSubFieldDQ('reorientation', 'eti', 'inds = [1 2 3]', 'position', 'start')
 still give all reorientation start time, instead of only first 3 reorientation.
+The 'position' is the name of attribute that can be input, which including 'start', 'end', etc. It means what 'position' of the subfield you want to get the quantity from.
 
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(i).name})); % load the i-th .mat, probably won't load tracks for i=1
@@ -68,6 +69,8 @@ The video won't play without saving when running playMovie(). For now, saving th
 
 
 Clone Track-Extraction-Software and Matlab-Track-Analysis to the same folder, because function process_mmfs_gershow needs to call extract-stack.exe in Track-Extraction-Software folder. Also if these folders are not in C drive, they should under Apps-SU to run .exe program.
+
+Copy the DLL files in Track-Extraction-Software\copy to windows system32, to C:\Windows\SysWOW64, then the track-extraction-software will work.
 
 processing_params_paulsmall.m defines extraction_settings.bxx with minArea as 10 pixels, and overallThreshold 20 pixels different from default extraction parameters. To use it, just include it as an extra parameters when running process_mmfs_gershow.m.
 The default setting of extraction is saved in Track-Extraction-Software\WindowsBinaries\extract-stack.exe. You can find it if running .\extract-stack.exe under its directory in Windows PowerShell.
@@ -117,3 +120,5 @@ Everytime when transfer, do a test experiment first to record empty video. Then 
 If it went well, don't close the front panel, so that the transferred BIN file is the same.
 
 On the same PC, if the first person's account is opening the 'coordinated led control panel.vi', other people cannot use it. Close the LabVIEW panels before sign out.
+
+If running test experiment without any larva, the processBIN won't succeed. Therefore at least use some larvae to test.
