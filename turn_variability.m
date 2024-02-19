@@ -4,10 +4,6 @@ m = fix(ntracks/n);  % m-by-n subplot ---------------
 tbin = 1;  % bin size of [0, tperiod], for histogram
 stepsize = 0.2; binsize = 2;  % for rate
 
-% paramerters when generating BIN files of stimulation --------------------
-t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
-t_stim_end = [600, 1200, 1800];
-frame_rate = 20;  % number of frames per second
 
 % head swing rate in period
 figure;
@@ -117,7 +113,7 @@ xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 ymax=0;
 for j = 1 : length(t)
     % 'led2Val_ton' fails some time if stimulation isn't strict square wave
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
     turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
 % 	turnStart = mod(turnStartTime, tperiod);  % in period
@@ -168,7 +164,7 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
             ymax = max(N/nperiod);
         end
         xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
-        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
+        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']); xline(6, '--');
     end
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
@@ -259,17 +255,13 @@ for i = 1: length(t_stim_start)
     turnrate = rate_from_time(turnStart_total, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
     time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
     ax(i) = subplot(length(t_stim_start),1,i);
-    plot(time_timestep, turnrate);
+    plot(time_timestep, turnrate); xline(9, 'k--');
     xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
     title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
 end
 sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_period_no_pause');
 savefig(gcf, savename); 
-
-
-
-
 
 
 
@@ -318,7 +310,7 @@ stepsize = 0.1; binsize = 0.5;
 % get the turnStart with some constraints
 turnStart = [];
 for i = 1: length(t)  % when include indsExpression in function getSubFieldDQ, cannot get quantities for all tracks
-    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
+    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
 %     turnStartTime_single =  t(i).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 0', 'position', 'start');
 %     turnStart_single = mod(turnStartTime_single, tperiod);  % in period
     turnStart = [turnStart turnStart_single];
@@ -329,20 +321,50 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_ton_no_pause'); %------------
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause'); %------------
 savefig(gcf, savename); 
 
 
-eset.expt.track(1).dq.speed
-v = t(1).getSubFieldDQ('run', 'speed', 'mean'); plot(v);
+% speed of run track part verses the index of run
+figure; v_mean_run = t(1).getSubFieldDQ('run', 'speed', 'position', 'mean') * 60 ; plot(v_mean_run);
+
+% speed of single larvae verses time in period
+j = 2;  % track number
+v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+toff_frame = eset.expt.track(j).dq.led12Val_toff;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+stepsize = 0.1;  % to get one average speed for stepsize seconds
+[x_toff,y_v, stderror] = meanyvsx(toff_frame, v_frame, 0:stepsize:tperiod);
+uppercurve = y_v + 0.5*stderror;
+lowercurve = y_v - 0.5*stderror;
+x_tofill = [x_toff, fliplr(x_tofff)];  % the x axis of the ploygon to fill
+y_tofill = [lowercurve, fliplr(uppercurve)];
+figure;
+pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+plot(x_toff, y_v, 'Color', 0.2*[1 1 1]); 
+xline(10, '--'); hold off;
+xlabel('Time toff in period (s)'); ylabel(['Speed of track ', num2str(j), ' (cm/min)']);
+
+% average speed of all tracks verses time in period at certain period of time/stimulation condition
+v_all = eset.gatherField('speed') * 60;  % cm/min
+t_all = eset.gatherField('eti');  % interpolated time (s) for each frame of each track, 1-by-(sum of all tracks' frame) 
+toff_all = eset.gatherField('led12Val_toff');  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+
+
+
+
+
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
-turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
-nperiod_array_1 = nperiod_array;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data_avg_turn_rate.mat');
-save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
-save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+% turnStart_total.(['turnStart', num2str(d(x).name(end-15:end-4))]) = turnStart;
+% nperiod_total.(['nperiod', num2str(d(x).name(end-15:end-4))]) = nperiod;
+% turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
+% nperiod_array_1 = nperiod_array;
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+% save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
+% save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+save(savename, 'turnStart', 'nperiod')
+save(savename, 'turnStart', 'nperiod', '-append')
 load(savename)
 turnrate_array = [turnrate_array_1 turnrate_array_2];
 nperiod_array = [nperiod_array_1 nperiod_array_2];
@@ -484,5 +506,6 @@ end
 % collision_events = fix(collision_events);  % change from double to integer
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 save(savename, 'collision_events')  % run this at the first time to create new saving file
+save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
 % save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 

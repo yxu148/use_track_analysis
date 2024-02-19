@@ -1,10 +1,11 @@
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    [9, 10, 11, 12]
     %[25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
+pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
 % load data, multiple eset, multiple expt, into esets
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -33,9 +34,9 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
 end
 
 
-tperiod = 20;
-nperiods = 69;  % select tracks that have [nperiods, Nperiods] length
-Nperiods = 91;
+tperiod = 15;  % in seconds, period of stimulation time
+nperiods = 79;  % select tracks that have [nperiods, Nperiods] length
+Nperiods = 121;
 download = true;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -45,32 +46,32 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     d = dir(fullfile(basedir, 'matfiles', '*.mat'));
     
     for k = 1 : length(x)  % loop for each expt in the eset
+
+        % eset.expt.globalQuantity.fieldname to check what field is, the field doesn't depend on which track
+        field_name = {esets.(eset_name).expt(k).globalQuantity.fieldname};
+        GQled1Val = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led1Val'}));
+        GQled2Val = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led2Val'}));
         
-        led1Val = esets.(eset_name).expt(k).gatherField('led1Val');
-        led2Val = esets.(eset_name).expt(k).gatherField('led2Val');
-        inds_led1Val = find(strcmpi('led1Val', {esets.(eset_name).expt(k).globalQuantity.fieldname}));
-        inds_led2Val = find(strcmpi('led2Val', {esets.(eset_name).expt(k).globalQuantity.fieldname}));
-        xdata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).xData; 
-        ydata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).yData + esets.(eset_name).expt(k).globalQuantity(inds_led2Val).yData;
-        % ydata(1:12e3) = ydata(1:12e3) + 100;  % this is to make the square wave fluctruate around a center quantity
-        ydata(12e3:18.96e3) = ydata(12e3:18.96e3) + 100;
-        ydata(30.96e3:end) = ydata(30.96e3:end) + 100;
-        esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata)
-        led12Val = esets.(eset_name).expt(k).gatherField('led12Val');
-        esets.(eset_name).expt(k).addTonToff('led12Val', 'square');
+        % create a new globalquantity which is square wave across the whole experiment time
+        xdata = GQled2Val.xData;  % xdata of all Global Quantity ledVals should be the same
+        ydata = GQled1Val.yData + GQled2Val.yData;  % LED intensity in PWM
+        index = find(GQled1Val.yData==0, 1, 'last');  % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
+        ydata(1:index) = ydata(1:index) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
+        esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata);  % create a man-made global field to add ton/toff
+        esets.(eset_name).expt(k).addTonToff('led12Val', 'square');  % create time on/off field based a global quantity fieldname 'led2Val'
+        GQton = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_ton'}));
+        GQtoff = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_toff'}));
         
-        ton = esets.(eset_name).expt(k).gatherField('led12Val_ton');  % get all values of 'led2Val_on' for all track in ExperimentSet eset
-        % return a k-N array of values, where N is total number of points, k is the dimension of the values of fieldname 'led2Val_off'
-        toff= esets.(eset_name).expt(k).gatherField('led12Val_toff'); 
         % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
         mkdir(fullfile(basedir, ['results', d(x(k)).name(end-16:end-4)]));
         if download
-            figure; t_end = 36e3-100;
-            plot(esets.(eset_name).expt(k).elapsedTime(1 : t_end)/60, led1Val(1:t_end), 'r'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1 : t_end)/60, led2Val(1:t_end), 'b'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1:t_end)/60, toff(1:t_end), 'k'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1:t_end)/60, toff(1:t_end)+100, 'k'); hold off;
-            xlabel('Time (min)'); legend('led1Val','led2Val', 'toff', 'toff');
+            % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
+            figure;
+            plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
+            plot(GQled2Val.xData/60, GQled2Val.yData, 'b'); hold on;
+            plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold on;
+            plot(GQled2Val.xData/60, GQtoff.yData+60, 'k'); hold off;
+            xlabel('Time (min)'); legend('led1Val','led2Val', 'toff');
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\led12Val_toff');
             savefig(gcf,savename);
@@ -80,7 +81,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         Ntracks = size(esets.(eset_name).expt(k).track);  % 1-by-Number_of_Tracks ( number of maggots)
         if download
             figure;
-            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), [0:10:90]);  % round 60.001 to 60
+            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), [0:10:120]);  % round 60.001 to 60
             xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(esets.(eset_name).expt(k).track)), ' Tracks']);
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\track_length');
@@ -104,6 +105,19 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\num_maggots_recognized');
             savefig(gcf, savename); close;
         end
+
+
+        % plot start time and end time of all tracks
+        if download
+            figure;
+            for j = 1: length(esets.(eset_name).expt(k).track)
+                    plot(esets.(eset_name).expt(k).track(j).startFrame + 1, j, 'bo'); hold on;
+                    plot(esets.(eset_name).expt(k).track(j).endFrame, j, 'rx'); hold on;
+            end
+            xlabel('Frame number'); ylabel('Index of tracks'); hold off; pause;
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\track_start_end');
+            savefig(gcf, savename); close;
+        end
         
 
     end
@@ -112,11 +126,11 @@ end
 
 
 download = true;  % always plot, if download true, save; if false, don't save.
-t_stim_start = [0, 600, 948];  % start time (s) of each intensity of stimulation
-t_stim_end = [600, 948, 1548];
+t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 1200, 1800];
 frame_rate = 20;  % number of frames per second
 plot_pturn = true;  
-tbin = 3;  edges = [0:tbin: tperiod];
+tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 plot_turnrate = true;
@@ -154,6 +168,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
                         ymax = max(N/nperiod);
                     end
+                    xline(6, 'k--');
                     xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
                     title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
                 end
@@ -194,6 +209,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                 time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
                 ax(i) = subplot(length(t_stim_start),1,i);
                 plot(time_timestep, turnrate);
+                xline(9, 'k--');  % stimulus change time at -------------
                 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
                 title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
             end
