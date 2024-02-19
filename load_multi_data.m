@@ -45,32 +45,32 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     d = dir(fullfile(basedir, 'matfiles', '*.mat'));
     
     for k = 1 : length(x)  % loop for each expt in the eset
+
+        % eset.expt.globalQuantity.fieldname to check what field is, the field doesn't depend on which track
+        field_name = {esets.(eset_name).expt(k).globalQuantity.fieldname};
+        GQled1Val = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led1Val'}));
+        GQled2Val = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led2Val'}));
         
-        led1Val = esets.(eset_name).expt(k).gatherField('led1Val');
-        led2Val = esets.(eset_name).expt(k).gatherField('led2Val');
-        inds_led1Val = find(strcmpi('led1Val', {esets.(eset_name).expt(k).globalQuantity.fieldname}));
-        inds_led2Val = find(strcmpi('led2Val', {esets.(eset_name).expt(k).globalQuantity.fieldname}));
-        xdata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).xData; 
-        ydata = esets.(eset_name).expt(k).globalQuantity(inds_led1Val).yData + esets.(eset_name).expt(k).globalQuantity(inds_led2Val).yData;
-        % ydata(1:12e3) = ydata(1:12e3) + 100;  % this is to make the square wave fluctruate around a center quantity
-        ydata(12e3:18.96e3) = ydata(12e3:18.96e3) + 100;
-        ydata(30.96e3:end) = ydata(30.96e3:end) + 100;
-        esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata)
-        led12Val = esets.(eset_name).expt(k).gatherField('led12Val');
-        esets.(eset_name).expt(k).addTonToff('led12Val', 'square');
+        % create a new globalquantity which is square wave across the whole experiment time
+        xdata = GQled2Val.xData;  % xdata of all Global Quantity ledVals should be the same
+        ydata = GQled1Val.yData + GQled2Val.yData;  % LED intensity in PWM
+        index = find(GQled1Val.yData==0, 1, 'last');  % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
+        ydata(1:index) = ydata(1:index) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
+        esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata);  % create a man-made global field to add ton/toff
+        esets.(eset_name).expt(k).addTonToff('led12Val', 'square');  % create time on/off field based a global quantity fieldname 'led2Val'
+        GQton = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_ton'}));
+        GQtoff = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_toff'}));
         
-        ton = esets.(eset_name).expt(k).gatherField('led12Val_ton');  % get all values of 'led2Val_on' for all track in ExperimentSet eset
-        % return a k-N array of values, where N is total number of points, k is the dimension of the values of fieldname 'led2Val_off'
-        toff= esets.(eset_name).expt(k).gatherField('led12Val_toff'); 
         % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
         mkdir(fullfile(basedir, ['results', d(x(k)).name(end-16:end-4)]));
         if download
-            figure; t_end = 36e3-100;
-            plot(esets.(eset_name).expt(k).elapsedTime(1 : t_end)/60, led1Val(1:t_end), 'r'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1 : t_end)/60, led2Val(1:t_end), 'b'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1:t_end)/60, toff(1:t_end), 'k'); hold on;
-            plot(esets.(eset_name).expt(k).elapsedTime(1:t_end)/60, toff(1:t_end)+100, 'k'); hold off;
-            xlabel('Time (min)'); legend('led1Val','led2Val', 'toff', 'toff');
+            % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
+            figure;
+            plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
+            plot(GQled2Val.xData/60, GQled2Val.yData, 'b'); hold on;
+            plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold on;
+            plot(GQled2Val.xData/60, GQtoff.yData+60, 'k'); hold off;
+            xlabel('Time (min)'); legend('led1Val','led2Val', 'toff');
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\led12Val_toff');
             savefig(gcf,savename);
