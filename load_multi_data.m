@@ -1,10 +1,11 @@
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    [9, 10, 11, 12]
     %[25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
+pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
 % load data, multiple eset, multiple expt, into esets
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -33,9 +34,9 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
 end
 
 
-tperiod = 20;
-nperiods = 69;  % select tracks that have [nperiods, Nperiods] length
-Nperiods = 91;
+tperiod = 15;  % in seconds, period of stimulation time
+nperiods = 79;  % select tracks that have [nperiods, Nperiods] length
+Nperiods = 121;
 download = true;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -80,7 +81,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         Ntracks = size(esets.(eset_name).expt(k).track);  % 1-by-Number_of_Tracks ( number of maggots)
         if download
             figure;
-            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), [0:10:90]);  % round 60.001 to 60
+            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), [0:10:120]);  % round 60.001 to 60
             xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(esets.(eset_name).expt(k).track)), ' Tracks']);
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\track_length');
@@ -125,11 +126,11 @@ end
 
 
 download = true;  % always plot, if download true, save; if false, don't save.
-t_stim_start = [0, 600, 948];  % start time (s) of each intensity of stimulation
-t_stim_end = [600, 948, 1548];
+t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 1200, 1800];
 frame_rate = 20;  % number of frames per second
 plot_pturn = true;  
-tbin = 3;  edges = [0:tbin: tperiod];
+tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 plot_turnrate = true;
@@ -167,6 +168,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
                         ymax = max(N/nperiod);
                     end
+                    xline(6, 'k--');
                     xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
                     title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
                 end
@@ -207,6 +209,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                 time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
                 ax(i) = subplot(length(t_stim_start),1,i);
                 plot(time_timestep, turnrate);
+                xline(9, 'k--');  % stimulus change time at -------------
                 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
                 title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
             end

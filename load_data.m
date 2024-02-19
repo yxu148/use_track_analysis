@@ -53,7 +53,7 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\led12Val_toff
 savefig(gcf,savename);
 % close;
 
-tperiod = 20;  % depend on the name of .mat file loaded, '_18_', or from the plot led2Val-Time
+tperiod = 15;  % depend on the name of .mat file loaded, '_18_', or from the plot led2Val-Time-----------------
 disp(['Time for one frame is ', num2str(eset.expt.elapsedTime(2)), ' s']);
 Ntracks = size(eset.expt(1).track);  % 1-by-Number_of_Tracks ( number of maggots)
 figure;
@@ -62,15 +62,16 @@ xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of Th
 pause;
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_length');
 savefig(gcf,savename);
-close;
+% close;
 
 % paramerters when generating BIN files of stimulation --------------------
 t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
 t_stim_end = [600, 1200, 1800];
 frame_rate = 20;  % number of frames per second
 
-nperiods = 69;  % select tracks that have [nperiods, Np eriods] length
-Nperiods = 91;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
+% To save longer tracks in t
+nperiods = 79;  % select tracks that have [nperiods, Np eriods] length
+Nperiods = 121;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
 disp(['After filtering out tracks within [', num2str(nperiods), ', ', num2str(Nperiods), '] periods']);
 t = eset.expt.track;
 minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));

@@ -4,10 +4,6 @@ m = fix(ntracks/n);  % m-by-n subplot ---------------
 tbin = 1;  % bin size of [0, tperiod], for histogram
 stepsize = 0.2; binsize = 2;  % for rate
 
-% paramerters when generating BIN files of stimulation --------------------
-t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
-t_stim_end = [600, 1200, 1800];
-frame_rate = 20;  % number of frames per second
 
 % head swing rate in period
 figure;
@@ -117,7 +113,7 @@ xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 ymax=0;
 for j = 1 : length(t)
     % 'led2Val_ton' fails some time if stimulation isn't strict square wave
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
     turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
 % 	turnStart = mod(turnStartTime, tperiod);  % in period
@@ -168,7 +164,7 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
             ymax = max(N/nperiod);
         end
         xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
-        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
+        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']); xline(6, '--');
     end
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
@@ -259,17 +255,13 @@ for i = 1: length(t_stim_start)
     turnrate = rate_from_time(turnStart_total, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
     time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
     ax(i) = subplot(length(t_stim_start),1,i);
-    plot(time_timestep, turnrate);
+    plot(time_timestep, turnrate); xline(9, 'k--');
     xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
     title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
 end
 sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_period_no_pause');
 savefig(gcf, savename); 
-
-
-
-
 
 
 
@@ -318,7 +310,7 @@ stepsize = 0.1; binsize = 0.5;
 % get the turnStart with some constraints
 turnStart = [];
 for i = 1: length(t)  % when include indsExpression in function getSubFieldDQ, cannot get quantities for all tracks
-    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
+    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
 %     turnStartTime_single =  t(i).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 0', 'position', 'start');
 %     turnStart_single = mod(turnStartTime_single, tperiod);  % in period
     turnStart = [turnStart turnStart_single];
@@ -329,7 +321,7 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_ton_no_pause'); %------------
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause'); %------------
 savefig(gcf, savename); 
 
 
