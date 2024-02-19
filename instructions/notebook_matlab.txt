@@ -13,3 +13,10 @@ A = fread(fileID)
 A
 fclose(fileID)
 
+
+Task scheduler to run MatLab code
+Add arguements:
+-r "processMMF.m; processBIN.m; pause(10); exit"
+
+It works well
+-r test_scheduler
