@@ -356,11 +356,15 @@ toff_all = eset.gatherField('led12Val_toff');  % interpolated time (s) for each 
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
-turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
-nperiod_array_1 = nperiod_array;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data_avg_turn_rate.mat');
-save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
-save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+% turnStart_total.(['turnStart', num2str(d(x).name(end-15:end-4))]) = turnStart;
+% nperiod_total.(['nperiod', num2str(d(x).name(end-15:end-4))]) = nperiod;
+% turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
+% nperiod_array_1 = nperiod_array;
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+% save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
+% save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+save(savename, 'turnStart', 'nperiod')
+save(savename, 'turnStart', 'nperiod', '-append')
 load(savename)
 turnrate_array = [turnrate_array_1 turnrate_array_2];
 nperiod_array = [nperiod_array_1 nperiod_array_2];
@@ -502,5 +506,6 @@ end
 % collision_events = fix(collision_events);  % change from double to integer
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 save(savename, 'collision_events')  % run this at the first time to create new saving file
+save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
 % save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 
