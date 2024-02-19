@@ -104,6 +104,19 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\num_maggots_recognized');
             savefig(gcf, savename); close;
         end
+
+
+        % plot start time and end time of all tracks
+        if download
+            figure;
+            for j = 1: length(esets.(eset_name).expt(k).track)
+                    plot(esets.(eset_name).expt(k).track(j).startFrame + 1, j, 'bo'); hold on;
+                    plot(esets.(eset_name).expt(k).track(j).endFrame, j, 'rx'); hold on;
+            end
+            xlabel('Frame number'); ylabel('Index of tracks'); hold off; pause;
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\track_start_end');
+            savefig(gcf, savename); close;
+        end
         
 
     end
