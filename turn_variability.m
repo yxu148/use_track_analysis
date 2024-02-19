@@ -325,8 +325,34 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all
 savefig(gcf, savename); 
 
 
-eset.expt.track(1).dq.speed
-v = t(1).getSubFieldDQ('run', 'speed', 'mean'); plot(v);
+% speed of run track part verses the index of run
+figure; v_mean_run = t(1).getSubFieldDQ('run', 'speed', 'position', 'mean') * 60 ; plot(v_mean_run);
+
+% speed of single larvae verses time in period
+j = 2;  % track number
+v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+toff_frame = eset.expt.track(j).dq.led12Val_toff;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+stepsize = 0.1;  % to get one average speed for stepsize seconds
+[x_toff,y_v, stderror] = meanyvsx(toff_frame, v_frame, 0:stepsize:tperiod);
+uppercurve = y_v + 0.5*stderror;
+lowercurve = y_v - 0.5*stderror;
+x_tofill = [x_toff, fliplr(x_tofff)];  % the x axis of the ploygon to fill
+y_tofill = [lowercurve, fliplr(uppercurve)];
+figure;
+pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+plot(x_toff, y_v, 'Color', 0.2*[1 1 1]); 
+xline(10, '--'); hold off;
+xlabel('Time toff in period (s)'); ylabel(['Speed of track ', num2str(j), ' (cm/min)']);
+
+% average speed of all tracks verses time in period at certain period of time/stimulation condition
+v_all = eset.gatherField('speed') * 60;  % cm/min
+t_all = eset.gatherField('eti');  % interpolated time (s) for each frame of each track, 1-by-(sum of all tracks' frame) 
+toff_all = eset.gatherField('led12Val_toff');  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+
+
+
+
+
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
