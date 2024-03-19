@@ -64,6 +64,7 @@ In my merge_new.m, the trackNum cannot be modified likely.
 
 The video won't play without saving when running playMovie(). For now, saving the video every time to solve this issue temporally.
 
+Go to check how does the standard error is plotted in function makeReorientationHistogram. It uses eset.expt(1).dr.interpTime. Check what does the derviation rule (dr) means.
 
 
 
@@ -122,3 +123,5 @@ If it went well, don't close the front panel, so that the transferred BIN file i
 On the same PC, if the first person's account is opening the 'coordinated led control panel.vi', other people cannot use it. Close the LabVIEW panels before sign out.
 
 If running test experiment without any larva, the processBIN won't succeed. Therefore at least use some larvae to test.
+
+After put black agar plate to the right place, wait a few minutes after all dusts falling down to start acquization. Otherwise too many bad tracks will fail to process BIN
