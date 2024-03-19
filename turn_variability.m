@@ -4,7 +4,7 @@ m = fix(ntracks/n);  % m-by-n subplot ---------------
 tbin = 1;  % bin size of [0, tperiod], for histogram
 stepsize = 0.2; binsize = 2;  % for rate
 
-
+%%  Head Swing
 % head swing rate in period
 figure;
 for j = 1 : ntracks
@@ -57,27 +57,7 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_headSwing
 savefig(gcf, savename); 
 
 
-% reorientation rate in period for each track
-figure;
-for j = 1 : ntracks
-    % return the numbe-th of ton
-    nperiod = max(t(j).getDerivedQuantity('led2Val_cyclenum_on')) - min(t(j).getDerivedQuantity('led2Val_cyclenum_on'));
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'position', 'start');  % time in period
-    % turnStart = turnStart([t(j).reorientation.startInd] < t_work*frame_rate);  % only keey the reorientation whose start frame number is less than some value
-    turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) / nperiod * 60;  % per min if t is in second
-    Nturn = nnz(turnStart>=0 & turnStart<=tperiod) ;
-    time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
-    ax(j) = subplot(m,n,j);
-    plot(time_timestep, turnrate); ax(j).XAxis.TickValues = [0, tperiod/4, tperiod/2, 3*tperiod/4, tperiod]; xline(tperiod/4, '--');
-    % ylim([0, 20]);
-    title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(Nturn), ')']);
-end
-xlabel(ax(1),'Time in Period (s)'); ylabel(ax(1), 'Reorientation Rate (per min)');
-sgtitle(['Step size is ', num2str(stepsize), ', bin size is ', num2str(binsize), ', (Number of Stimulation, Number of Turn)']);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton');
-savefig(gcf, savename); 
-% saveas(gcf, savename, 'png');
-
+%% Probability of Rurn
 
 % Probability of start to turn in one period for each track
 figure;
@@ -202,29 +182,8 @@ sgtitle('(Track number, Number of Stimulation, Number of Turn, Response)');
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all_errorbar');
 savefig(gcf, savename); 
 
-
-
-% histogram of start turn time in period in each track
-figure;
-for j=1:ntracks
-    %the track divided by the period)
-    % eset.expt.track(j) calls for the j-th track (maggot)
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start');  % turn start time in period, ton means period starts with light off
-%     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % get the beginning of reorientation not in period
-%     turnStart = toff(round(turnStartTime/eset.expt.elapsedTime(2)));  %the problem is the slope of time-frame number isn't eset.expt.elapsedtime(2)
-    ax(j) = subplot(m,n,j);
-    histogram(turnStart, 0:tbin:tperiod); title(['Track ', num2str(t(j).trackNum)]);  % change the size of bin according to period
-    %ylim([0, 12]);  % unitify the y axis range to compare easily
-end
-xlabel(ax(1),'Reorientation Start Time in Period (s)'); ylabel(ax(1), 'Count');  % label the first plot
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_turn');
-savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results_202308121650
-% saveas(gcf, savename, 'png');  % run after insert texts
-
 % Histogram of probability difference before and after stimulation
-tbin = 3;  edges = [0:tbin: tperiod];
-% edges = [0,3,6,10,14,17,20];
-%edges = [0,4,8,12,16,20];
+tbin = 3;  edges = 0:tbin: tperiod;
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 increase_p = NaN(1, ntracks);
 abs_p = NaN(1, ntracks);
@@ -249,6 +208,24 @@ title([num2str(ntracks), ' Tracks Longer Than ', num2str(nperiods),  ' Periods']
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\abs_p_turn_1');
 savefig(gcf, savename); 
 
+%% Turn Time
+% histogram of start turn time in period in each track
+figure;
+for j=1:ntracks
+    %the track divided by the period)
+    % eset.expt.track(j) calls for the j-th track (maggot)
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start');  % turn start time in period, ton means period starts with light off
+%     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % get the beginning of reorientation not in period
+%     turnStart = toff(round(turnStartTime/eset.expt.elapsedTime(2)));  %the problem is the slope of time-frame number isn't eset.expt.elapsedtime(2)
+    ax(j) = subplot(m,n,j);
+    histogram(turnStart, 0:tbin:tperiod); title(['Track ', num2str(t(j).trackNum)]);  % change the size of bin according to period
+    %ylim([0, 12]);  % unitify the y axis range to compare easily
+end
+xlabel(ax(1),'Reorientation Start Time in Period (s)'); ylabel(ax(1), 'Count');  % label the first plot
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_turn');
+savefig(gcf, savename);  % save figNumTurn as num_turn.fig in folder \results_202308121650
+% saveas(gcf, savename, 'png');  % run after insert texts
+
 
 % not make much sense, because track selection is random.
 % it will make sense if cutting tracks into begining at 0 s, and end at 60
@@ -262,23 +239,47 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_turn_all'
 savefig(gcf, savename); 
 
 
+%% Turn Rate
+
+% turn rate in period for each track
+figure;
+for j = 1 : ntracks
+    % return the numbe-th of ton
+    nperiod = max(t(j).getDerivedQuantity('led2Val_cyclenum_on')) - min(t(j).getDerivedQuantity('led2Val_cyclenum_on'));
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'position', 'start');  % time in period
+    % turnStart = turnStart([t(j).reorientation.startInd] < t_work*frame_rate);  % only keey the reorientation whose start frame number is less than some value
+    turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) / nperiod * 60;  % per min if t is in second
+    Nturn = nnz(turnStart>=0 & turnStart<=tperiod) ;
+    time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
+    ax(j) = subplot(m,n,j);
+    plot(time_timestep, turnrate); ax(j).XAxis.TickValues = [0, tperiod/4, tperiod/2, 3*tperiod/4, tperiod]; xline(tperiod/4, '--');
+    % ylim([0, 20]);
+    title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(Nturn), ')']);
+end
+xlabel(ax(1),'Time in Period (s)'); ylabel(ax(1), 'Reorientation Rate (per min)');
+sgtitle(['Step size is ', num2str(stepsize), ', bin size is ', num2str(binsize), ', (Number of Stimulation, Number of Turn)']);
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton');
+savefig(gcf, savename); 
+% saveas(gcf, savename, 'png');
+
+
 % turn rate of all tracks at a certain period of time
 figure; t = eset.expt.track;
 stepsize = 0.1; binsize = 0.5;
 % only keep the reorientation whose start time falls into the i-th intensity of stimulation
 for i = 1: length(t_stim_start)
-    nperiod = 0;
-    turnStart_total=[];
+    nperiod = 0;  % initialize the number of periods for each stimulation condition
+    turnStart_total=[];  % initialize the turn start time of all tracks for each stimulation condition
     for j = 1: length(t)
-%         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % time (s) not in period
-%         turnStartTime = turnStartTime((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
-%         turnStart = mod(turnStartTime, tperiod);  % in period
-%         turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        % turn start time (second) of track j, excluding pause
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
+        % turn start time in period (second) of track j, excluding pause, start from intensity low. 
         turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
+        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
-        turnStart_total = [turnStart_total turnStart];
+        turnStart_total = [turnStart_total turnStart];  % to contain more turnStart after each loop of j
         if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
+            % add to nperiod after each loop of j
             nperiod = nperiod + (min(t(j).endFrame, t_stim_end(i)*frame_rate) - max(t(j).startFrame, t_stim_start(i)*frame_rate)) / frame_rate / tperiod;
         end
     end
@@ -329,20 +330,14 @@ savefig(gcf, savename);
 
 
 % turn rate of all tracks
-figure; eset.makeReorientationHistogram('led1Val_ton', 0:stepsize:tperiod);
+figure; eset.makeReorientationHistogram('led12Val_ton', 0:stepsize:tperiod);
 
 % turn rate of all tracks
 figure;  t = eset.expt.track;
 stepsize = 0.1; binsize = 0.5;
-% turnStartTime =  eset.expt.track.getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % time (s) not in period
-% turnStart = mod(turnStartTime, tperiod);  % in period
-% turnStart =  t.getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start');
-% get the turnStart with some constraints
 turnStart = [];
 for i = 1: length(t)  % when include indsExpression in function getSubFieldDQ, cannot get quantities for all tracks
-    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  %-----------------
-%     turnStartTime_single =  t(i).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 0', 'position', 'start');
-%     turnStart_single = mod(turnStartTime_single, tperiod);  % in period
+    turnStart_single =  t(i).getSubFieldDQ('reorientation', 'led1Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
     turnStart = [turnStart turnStart_single];
 end
 nperiod = sum(eset.expt.elapsedTime(eset.gatherField('npts'))) / tperiod;  % total number of period for all tracks, assume all period is uniform
@@ -351,7 +346,10 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause'); %------------
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause');
+savefig(gcf, savename); 
+
+
 % Turn rate in period for each long track
 % Variability, each track in each column, each stimulation period in each row
 % save info into a existing structure larvae
@@ -545,13 +543,19 @@ xlabel('toff (s)'); ylabel(['Body angle of track ', num2str(j), ' (^o)']);
 % turnrate_array_1 =turnrate_array;  % change the saving name _1 for the next one
 % nperiod_array_1 = nperiod_array;
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
-% save(savename, 'turnrate_array_1', 'nperiod_array_1')  % run this at the first time to create new saving file
-% save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+
 save(savename, 'turnStart', 'nperiod')
 save(savename, 'turnStart', 'nperiod', '-append')
+if isfile(savename)
+    save(savename, 'larvae', '-append')
+else
+    save(savename, 'larvae')
+end
+
 load(savename)
 turnrate_array = [turnrate_array_1 turnrate_array_2];
 nperiod_array = [nperiod_array_1 nperiod_array_2];
+
 
 isrun = eset.gatherField('isrun');  % for all tracks in the expt, 1 for run, 0 for not
 [tx,fracinrun] = meanyvsx(toff, isrun, 0:0.5:tperiod);  % toff transfer frame index to time between 0 and 60s
