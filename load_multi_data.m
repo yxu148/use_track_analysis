@@ -2,10 +2,10 @@ basedir_cell = {
     'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    [9, 10, 11, 12]
+    1:21
     %[25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
-pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
+pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
 % load data, multiple eset, multiple expt, into esets
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -37,7 +37,7 @@ end
 tperiod = 15;  % in seconds, period of stimulation time
 nperiods = 79;  % select tracks that have [nperiods, Nperiods] length
 Nperiods = 121;
-download = true;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
+download = false;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     basedir = basedir_cell{folder_index};
@@ -81,7 +81,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         Ntracks = size(esets.(eset_name).expt(k).track);  % 1-by-Number_of_Tracks ( number of maggots)
         if download
             figure;
-            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), [0:10:120]);  % round 60.001 to 60
+            histogram(round(esets.(eset_name).expt(k).elapsedTime([esets.(eset_name).expt(k).track.npts])/tperiod), 0:10:120);  % round 60.001 to 60
             xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(esets.(eset_name).expt(k).track)), ' Tracks']);
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\track_length');
@@ -125,20 +125,19 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
 end
 
 
-download = true;  % always plot, if download true, save; if false, don't save.
+download = false;  % if download true, save figures; if false, don't save.
 save_data = true;
 t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
 t_stim_end = [600, 1200, 1800];
 stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 frame_rate = 20;  % number of frames per second
-plot_pturn = true;  
+plot_pturn = false;  
 tbin = 3;  edges = 0:tbin: tperiod;
-%edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-plot_turnrate = true;
-stepsize = 0.1; binsize = 0.5;
+plot_turnrate = false;
 plot_turnrate_individual = false;
 plot_speed_individual = true;
+stepsize = 0.1; binsize = 0.5;  % seconds
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     
     basedir = basedir_cell{folder_index};
@@ -231,10 +230,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                 nperiod = 0;
                 turnStart_total=[];
                 for j = 1: length(t)
-            %         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start');  % time (s) not in period
-            %         turnStartTime = turnStartTime((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
-            %         turnStart = mod(turnStartTime, tperiod);  % in period
-            %         turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'position', 'start');  % turn start time in period, ton means period starts with light on
+
                     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
                     turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
                     turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
@@ -244,7 +240,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     end
                 end
                 turnrate = rate_from_time(turnStart_total, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
-                time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
+                time_timestep = (0 : fix(tperiod/stepsize)) * stepsize;
                 ax(i) = subplot(length(t_stim_start),1,i);
                 plot(time_timestep, turnrate);
                 xline(9, 'k--');  % stimulus change time at -------------
