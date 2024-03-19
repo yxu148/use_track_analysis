@@ -139,17 +139,18 @@ savefig(gcf, savename);
 % Probability of start to turn in one period for each track
 % Variability, each track in each column, each period in each row
 figure;
-tbin = 3;  edges = [0:tbin: tperiod];
+tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-ymax=0;
+turnStart_mean = zeros(1, length(xbar));  % the average turnTime that falls to one bin
+turnStart_str = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
+load(strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat'), 'larvae');
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
     for j = 1 : length(t)
         % 'led2Val_ton' fails some time if stimulation isn't strict square wave
         turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
-    % 	turnStart = mod(turnStartTime, tperiod);  % in period
         %number of period of stimulation that falls into certain intensity
         t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
         t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
@@ -158,18 +159,47 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
 %         ax(index_subplot) = subplot(length(t), length(t_stim_start), index_subplot);
         index_subplot = j + (i-1)*length(t);
         ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
-        [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
-        bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-        if max(N/nperiod) > ymax
-            ymax = max(N/nperiod);
+        
+%         set(ax(index_subplot), 'Units', 'inches');
+%         pos = get(ax(index_subplot), 'Position');
+%         pos(3:4) =  [2, 1];  % width and height
+%         set(ax(index_subplot), 'Position', pos);
+
+        [N, ~] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
+        for r = 1 : (length(edges) - 1)
+            turnStart_bin = turnStart((turnStart > edges(r)) & (turnStart < edges(r+1)));
+            turnStart_mean(r) = mean(turnStart_bin);
+%             turnStart_str(r) = std(turnStart_bin, 1) / sqrt(N(r));  % standard error
+            turnStart_str(r) = std(turnStart_bin, 1);
         end
-        xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
-        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']); xline(6, '--');
+        bar(xbar, N/nperiod, 1); hold on; % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
+        errorbar(turnStart_mean, N/nperiod, sqrt(N)/nperiod / 2, 'b.'); % the length of the error bar is the error.
+        errorbar(turnStart_mean, N/nperiod, turnStart_str/2, 'horizontal', 'k.'); hold off;
+        xticks(edges); ylim([0, 1]); xline(6, '--');
+        
+        
+%         % save info into a new structure larvae
+        larva_index = ['larva', num2str(j)];
+%         larvae.(larva_index).trackNum = t(j).trackNum;  % integer
+%         larvae.(larva_index).expt_info = d(x).name(1:end-4);  % string
+%         larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
+%         larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
+%         larvae.(larva_index).c.(stim_color{i}) = sqrt(N)/nperiod;
+%         larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
+%         if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
+%             larvae.(larva_index).response.(stim_color{i}) = '1';
+%         elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
+%             larvae.(larva_index).response.(stim_color{i}) = '1';
+%         else
+%             larvae.(larva_index).response.(stim_color{i}) = '0';
+%         end
+
+        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
     end
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
-sgtitle('(Number of Stimulation, Number of Turn)');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all');
+sgtitle('(Track number, Number of Stimulation, Number of Turn, Response)');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all_errorbar');
 savefig(gcf, savename); 
 
 
