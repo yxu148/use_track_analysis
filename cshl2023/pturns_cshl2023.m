@@ -6,7 +6,7 @@ figlocation_list = {
     'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_2_3#T_Bl_Sq_2,5to6P_20_1_3\results_202308241620',
     'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_318to532P_20_2_3#T_Bl_Sq_2,5to6P_20_1_3\results_202308251718',
     'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\stitch_extracted\Gr21a@Chrimson(3)_s\T_Re_Sq_318to532P_20_2_3#T_Bl_Sq_2,5to6P_20_1_3\results_202309141250'
-    };
+    };  % nexp-by-1 cell
     
 pturn_hist_all = [];
 
@@ -137,17 +137,9 @@ end
 % histogram of pturn for different light with Gaussian fit
 % determine the edges to plot
 edge_min = min([Pblue; Pred; Pbluered]);
-if fix(10 * edge_min) - 1 == 0
-    edge_min = 0;  % 0.15 or 0.1 give 0
-else
-    edge_min = (fix(10 * edge_min) - 1) / 10;  % -0.354 or -0.3 give -0.4
-end
+edge_min = floor(edge_min * 10) / 10;  % find it's left boundary with 1 decimal
 edge_max = max([Pblue; Pred; Pbluered]);
-if fix(10 * edge_max) + 1 == 0
-    edge_max = 0;
-else
-    edge_max = (fix(10 * edge_max) + 1) / 10;
-end
+edge_max = ceil(edge_max * 10) / 10;  % find it's right boundary with 1 decimal
 edges = edge_min : 0.1 : edge_max;
 % get the counts
 nblue = histcounts(Pblue, edges, 'Normalization', 'probability');
@@ -221,7 +213,7 @@ scatter(x, y, sz, c, 'filled')
 axis equal;
 xlabel('Pturn during the first 3 s of blue'); ylabel('Pturn during the first 3 s of red');
 cbar = colorbar;
-colormap parula;
+colormap turbo;
 cbar.Label.String = 'pblue + pred - p(blue+red)';
 cbar.Limits = [-0.6, 0.6];
 hold on; plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
