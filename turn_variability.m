@@ -497,37 +497,7 @@ savefig(gcf, savename);
 % saveas(gcf, savename, 'png');
 
 
-% plot start time and end time of all tracks
-figure;
-for j = 1: length(eset.expt.track)
-        plot(eset.expt.track(j).startFrame + 1, j, 'bo'); hold on;
-        plot(eset.expt.track(j).endFrame, j, 'rx'); hold on;
-end
-xlabel('Frame number'); ylabel('Index of tracks'); hold off;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_start_end');
-savefig(gcf, savename); 
 
-
-% plot the number of recognized maggots verses frame. Maggots in collision,
-% out of ROI, or discarded by many different tests in processBIN won't be recognized.
-ntracks_frame = zeros(1, length(eset.expt.elapsedTime));
-start_frame_tracks = [eset.expt.track.startFrame] + 1;  % min is 1
-end_frame_tracks = [eset.expt.track.endFrame] + 1;
-for j = 1:length(eset.expt.track)
-    ntracks_frame(start_frame_tracks(j) : end) = ntracks_frame(start_frame_tracks(j) : end) + 1;
-    ntracks_frame(end_frame_tracks(j) : end) = ntracks_frame(end_frame_tracks(j) : end) - 1;
-end
-figure; plot(ntracks_frame);
-xlabel('Frame number'); ylabel('Number of recognized maggots');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_maggots_recognized');
-savefig(gcf, savename); 
-
-
-% Changing of mean speed of each run for one track
-j=3;  % track index
-figure;
-plot(60 * eset.expt.track(j).getSubFieldDQ('run', 'speed', 'position', 'mean'));
-xlabel('The number-th Run'); ylabel('Mean speed (cm/min)'); title(['Track ', num2str(j)]);
 
 
 % Plot one or multiple tracks to determine which to stitch
@@ -553,49 +523,11 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_
 savefig(gcf, savename); 
 
 
-% tracks in each cell will be stitched to a single track, not finished yet
-stitch_info = {[11, 13], [3, 9], [4, 5, 8]};
-edge_info = [];
-figure;
-tbin = 3;  edges = [0:tbin: tperiod];
-%edges = [0,4,7,10,13,16,20];
-xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-ymax=0;
-for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
-    for j = 1 : length(t)
-        % 'led2Val_ton' fails some time if stimulation isn't strict square wave
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
-        turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
-        turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
-    % 	turnStart = mod(turnStartTime, tperiod);  % in period
-        %number of period of stimulation that falls into certain intensity
-        t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
-        t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
-        nperiod = (t_end - t_start) / tperiod;
-%         index_subplot = j*length(t_stim_start) - (length(t_stim_start)-i);  % to plot by column
-%         ax(index_subplot) = subplot(length(t), length(t_stim_start), index_subplot);
-        index_subplot = j + (i-1)*length(t);
-        ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
-        [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
-        bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-        if N/nperiod > ymax
-            ymax = N/nperiod;
-        end
-        xticks(edges);    ylim([0, 0.75]);  % comment ylim first, change to ymax at the second run ----------------
-        title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
-    end
-end
-xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
-sgtitle('(Number of Stimulation, Number of Turn)');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all');
-savefig(gcf, savename); 
-
 
 % Find the collision location and time, and save collision_events [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
 stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened, whose nt(number of tracks) ~= 1.
 collision_events = [];  % [track_ID, x(pixel), y(pixel), t(frame), x(cm), y(cm)] in units of pixels and frames
 for j = 1 : length(stitched_track_index)  % loop all stitched tracks
-    
     frames_collision = find(eset.expt.track(stitched_track_index(j)).iscollision);  % frames that collision is in progress
     frame_collision_start = frames_collision([true, diff(frames_collision) ~= 1]);  % [collision 1 start frame, collision 2 start frame, ...]
     frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);  % this collision end frame will be off a lot
