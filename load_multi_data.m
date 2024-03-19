@@ -149,9 +149,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             t = esets.(eset_name).expt(k).track;
             minNpoints = nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
             maxNpoints = Nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
-            disp(['Long tracks / tracks: ', num2str(nnz((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints))), ' / ', num2str(length(t))]);  % nnz (number of nonzero elements)
             t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
-            ymax = 0;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
             if isfile(savename)
                 load(savename, 'larvae');
@@ -172,10 +170,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     nperiod = (t_end - t_start) / tperiod;
                     index_subplot = j + (i-1)*length(t);
                     ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
-                    [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
-                    bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-                    if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
-                        ymax = max(N/nperiod);
+                    [N, ~] = histcounts(turnStart, edges);  % assume larvae can only turn one time within tbin
                     pturn = N/nperiod;
                     pturn_error = sqrt(N)/nperiod;
                     for r = 1 : (length(edges) - 1)
@@ -183,9 +178,11 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                         turnStart_mean(r) = mean(turnStart_bin);
                         turnStart_std(r) = std(turnStart_bin, 1);
                     end
+                    bar(xbar, pturn, 1);  hold on;% the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
+                    errorbar(turnStart_mean, pturn, pturn_error / 2, 'k.'); % the length of the error bar is sqrt(N)/nperiod
+                    errorbar(turnStart_mean, pturn, turnStart_std/2, 'horizontal', 'k.'); hold off;
                     xline(6, 'k--');
                     xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
-                    title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
 
                     larva_index = ['larva', num2str(j)];
                     if save_data
@@ -207,10 +204,12 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                         end
                     end
 
+                    title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+
                 end
             end
             xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
-            sgtitle('(Number of Stimulation, Number of Turn)');
+            sgtitle('(Track number, Number of Stimulation, Number of Turn, Response)');
             pause;
             if download
                 savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\p_turn_no_pause_all');
