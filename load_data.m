@@ -2,7 +2,7 @@ basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extrac
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 % reload experiment from mat files, called experiment set (eset), belong to @ExperimentSet object
 disp('Loading data...');
-x = [3];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
+x = [1];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
 pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
@@ -67,6 +67,7 @@ savefig(gcf,savename);
 % paramerters when generating BIN files of stimulation --------------------
 t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
 t_stim_end = [600, 1200, 1800];
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 frame_rate = 20;  % number of frames per second
 
 % To save longer tracks in t
@@ -80,3 +81,28 @@ disp(['There are still ', num2str(nnz((maxNpoints >= [t.npts]) & ([t.npts] >= mi
 t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
 disp('The filtered tracks are stored in t');
 
+
+% plot start time and end time of all tracks
+figure;
+for j = 1: length(eset.expt.track)
+        plot(eset.expt.track(j).startFrame + 1, j, 'bo'); hold on;
+        plot(eset.expt.track(j).endFrame, j, 'rx'); hold on;
+end
+xlabel('Frame number'); ylabel('Index of tracks'); hold off;
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_start_end');
+savefig(gcf, savename); 
+
+
+% plot the number of recognized maggots verses frame. Maggots in collision,
+% out of ROI, or discarded by many different tests in processBIN won't be recognized.
+ntracks_frame = zeros(1, length(eset.expt.elapsedTime));
+start_frame_tracks = [eset.expt.track.startFrame] + 1;  % min is 1
+end_frame_tracks = [eset.expt.track.endFrame] + 1;
+for j = 1:length(eset.expt.track)
+    ntracks_frame(start_frame_tracks(j) : end) = ntracks_frame(start_frame_tracks(j) : end) + 1;
+    ntracks_frame(end_frame_tracks(j) : end) = ntracks_frame(end_frame_tracks(j) : end) - 1;
+end
+figure; plot(ntracks_frame);
+xlabel('Frame number'); ylabel('Number of recognized maggots');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_maggots_recognized');
+savefig(gcf, savename); 
