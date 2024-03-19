@@ -322,6 +322,39 @@ plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause'); %------------
+% Turn rate in period for each long track
+% Variability, each track in each column, each stimulation period in each row
+% save info into a existing structure larvae
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+load(savename, 'larvae');
+figure;
+stepsize = 0.1; binsize = 0.5;
+for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
+    for j = 1 : length(t)  % j-th track
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+        turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
+        %number of period of stimulation that falls into certain intensity
+        t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th intensity of stimulation 
+        t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+        nperiod = (t_end - t_start) / tperiod;
+%         index_subplot = j*length(t_stim_start) - (length(t_stim_start)-i);  % to plot by column
+%         ax(index_subplot) = subplot(length(t), length(t_stim_start), index_subplot);
+        index_subplot = j + (i-1)*length(t);  % to put each track in each column, and each stimulation period in each row
+        ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
+        turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
+        time_timestep = (0 : fix(tperiod/stepsize)) * stepsize;
+        plot(time_timestep, turnrate); xline(6, 'k--');
+        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(length(turnStart)), ')']);
+        
+        % add new contents to the structure larvae
+        larva_index = ['larva', num2str(j)];
+        larvae.(larva_index).turnrate.(stim_color{i}) = turnrate;
+    end
+end
+linkaxes(ax, 'y');  % align subplots with y axis
+xlabel(ax(1), 'ton (s)'); ylabel(ax(1), 'Turn rate (min^{-1})'); sgtitle(['Stepsize = ', num2str(stepsize), ', binsize = ', num2str(binsize), ' (track number, number of period, number of turn)']);
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton_individual');
 savefig(gcf, savename); 
 
 
