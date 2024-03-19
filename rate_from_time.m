@@ -9,8 +9,8 @@ m = fix(T/s);
 r = zeros(1, m + 1);
 
 for j = 0 : m
-    tleft = mod(j*s-b, T);  % periodic boundary condition
-    tright = mod(j*s, T);
+    tleft = mod(j*s- b/2, T);  % use mod to have periodic boundary condition
+    tright = mod(j*s+ b/2, T);  % r(t) is the calculated between [t-b/2, t+b/2)
     if tleft>tright
         r(j+1) = nnz(t >= tleft | t < tright ) / b;
     else
