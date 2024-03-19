@@ -325,8 +325,25 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all
 savefig(gcf, savename); 
 
 
+%% Speed
 % speed of run track part verses the index of run
 figure; v_mean_run = t(1).getSubFieldDQ('run', 'speed', 'position', 'mean') * 60 ; plot(v_mean_run);
+
+
+% speed of single larvae verses experimental time
+j = 1;  % track number
+v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+t_frame = eset.expt.track(j).dq.eti;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+turnStartTime =  eset.expt.track(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+figure;
+plot(t_frame, v_frame); hold on;
+plot(turnStartTime, 0.3, 'ok'); hold off; legend('Speed', 'Turn start')
+xlabel('Time (s)'); ylabel('Speed (cm/min)'); title(['Track ', num2str(j)])
+
+
+
+
+
 
 % speed of single larvae verses time in period
 j = 2;  % track number
@@ -336,7 +353,7 @@ stepsize = 0.1;  % to get one average speed for stepsize seconds
 [x_toff,y_v, stderror] = meanyvsx(toff_frame, v_frame, 0:stepsize:tperiod);
 uppercurve = y_v + 0.5*stderror;
 lowercurve = y_v - 0.5*stderror;
-x_tofill = [x_toff, fliplr(x_tofff)];  % the x axis of the ploygon to fill
+x_tofill = [x_toff, fliplr(x_toff)];  % the x axis of the ploygon to fill
 y_tofill = [lowercurve, fliplr(uppercurve)];
 figure;
 pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
@@ -350,9 +367,94 @@ t_all = eset.gatherField('eti');  % interpolated time (s) for each frame of each
 toff_all = eset.gatherField('led12Val_toff');  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
 
 
+% Changing of mean speed of each run for one track
+j=3;  % track index
+figure;
+plot(60 * eset.expt.track(j).getSubFieldDQ('run', 'speed', 'position', 'mean'));
+xlabel('The number-th Run'); ylabel('Mean speed (cm/min)'); title(['Track ', num2str(j)]);
 
 
+% speed of all tracks at a certain period of time of stimulation
+figure; t = eset.expt.track;
+% only keep the speed whose start time falls into the i-th intensity of stimulation
+for i = 1: length(t_stim_start)
+    nperiod = 0;  % initialize the number of periods for each stimulation condition
+    toff_frame_total= [];  % initialize the turn start time of all tracks for each stimulation condition
+    v_frame_total = [];
+    for j = 1: length(t)
+        v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+        toff_frame = eset.expt.track(j).dq.led12Val_toff;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+        t_frame = eset.expt.track(j).dq.eti;
+        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
+        v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+        toff_frame = toff_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+        toff_frame_total = [toff_frame_total, toff_frame];
+        v_frame_total = [v_frame_total, v_frame];
+        if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
+            % add to nperiod after each loop of j
+            nperiod = nperiod + (min(t(j).endFrame, t_stim_end(i)*frame_rate) - max(t(j).startFrame, t_stim_start(i)*frame_rate)) / frame_rate / tperiod;
+        end
+    end
+    stepsize = 0.1;  % to get one average speed for stepsize seconds
+    [x_toff,y_v, stderror] = meanyvsx(toff_frame_total, v_frame_total, 0:stepsize:tperiod);
+    uppercurve = y_v + 0.5*stderror;
+    lowercurve = y_v - 0.5*stderror;
+    x_tofill = [x_toff, fliplr(x_toff)];  % the x axis of the ploygon to fill
+    y_tofill = [lowercurve, fliplr(uppercurve)];
+    ax(i) = subplot(length(t_stim_start),1,i);
+    pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+    plot(x_toff, y_v, 'Color', 0.2*[1 1 1]); xline(9, '--'); hold off;
+    xlabel('Time toff in period (s)'); ylabel('Average speed of all tracks (cm/min)');
+    title([num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
+end
+sgtitle(['Step size = ', num2str(stepsize), ' s']); linkaxes(ax, 'y');  % align subplots with y axis
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\v_tperiod_stim_group');
+savefig(gcf, savename); 
 
+
+% speed of each long track at a certain period of time of stimulation
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+if isfile(savename)
+    load(savename, 'larvae');
+else
+    clear larvae;
+end
+figure; stepsize = 0.1;  % to get one average speed for stepsize seconds
+% only keep the speed whose start time falls into the i-th intensity of stimulation
+for i = 1: length(t_stim_start)
+    for j = 1: length(t)
+        v_frame = t(j).dq.speed * 60;  % cm/min
+        ton_frame = t(j).dq.led12Val_ton;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+        t_frame = t(j).dq.eti;
+        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
+        v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+        ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+        %number of period of stimulation that falls into certain intensity
+        t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+        t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+        nperiod = (t_end - t_start) / tperiod;
+        index_subplot = j + (i-1)*length(t);
+        ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
+        [x_ton,y_v, ~, stderror] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);  % std
+        uppercurve = y_v + 0.5*stderror;
+        lowercurve = y_v - 0.5*stderror;
+        x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
+        y_tofill = [lowercurve, fliplr(uppercurve)];
+        pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+        plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); xline(6, '--'); hold off;
+        xlabel('ton (s)'); ylabel('Speed (cm/min)');
+
+        % add new contents to the structure larvae
+        larva_index = ['larva', num2str(j)];
+        larvae.(larva_index).speed.(stim_color{i}) = y_v;
+
+        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+
+    end
+end
+sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, nperiod, response)']);  linkaxes(ax, 'y');  % align subplots with y axis
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\v_ton_stim_individual');
+savefig(gcf, savename); 
 
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
