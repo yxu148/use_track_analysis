@@ -126,6 +126,7 @@ end
 
 
 download = true;  % always plot, if download true, save; if false, don't save.
+save_data = true;
 t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
 t_stim_end = [600, 1200, 1800];
 frame_rate = 20;  % number of frames per second
@@ -151,6 +152,14 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             disp(['Long tracks / tracks: ', num2str(nnz((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints))), ' / ', num2str(length(t))]);  % nnz (number of nonzero elements)
             t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
             ymax = 0;
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                load(savename, 'larvae');
+            else
+                clear larvae;
+            end
+            turnStart_mean = zeros(1, length(xbar));  % the average turnTime that falls to one bin
+            turnStart_std = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
             for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
                 for j = 1 : length(t)
                     % 'led2Val_ton' fails some time if stimulation isn't strict square wave
@@ -167,10 +176,37 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
                     if max(N/nperiod) > ymax  % check to make this work!!!!!!!!!!!!
                         ymax = max(N/nperiod);
+                    pturn = N/nperiod;
+                    pturn_error = sqrt(N)/nperiod;
+                    for r = 1 : (length(edges) - 1)
+                        turnStart_bin = turnStart((turnStart > edges(r)) & (turnStart < edges(r+1)));
+                        turnStart_mean(r) = mean(turnStart_bin);
+                        turnStart_std(r) = std(turnStart_bin, 1);
                     end
                     xline(6, 'k--');
                     xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
                     title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
+
+                    larva_index = ['larva', num2str(j)];
+                    if save_data
+                        % save info into a new structure larvae
+                        larvae.(larva_index).trackNum = t(j).trackNum;  % integer
+                        larvae.(larva_index).expt_info = d(x(k)).name(1:end-4);  % string
+                        larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
+                        larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
+                        larvae.(larva_index).pturn_error.(stim_color{i}) = sqrt(N)/nperiod;
+                        larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
+                        larvae.(larva_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
+                        larvae.(larva_index).turnStart_std.(stim_color{i}) = turnStart_std;
+                        if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
+                            larvae.(larva_index).response.(stim_color{i}) = '1';
+                        elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
+                            larvae.(larva_index).response.(stim_color{i}) = '1';
+                        else
+                            larvae.(larva_index).response.(stim_color{i}) = '0';
+                        end
+                    end
+
                 end
             end
             xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
@@ -223,6 +259,16 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         end % end plot_pturn
         
         
+        if save_data
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                save(savename, 'larvae', '-append')
+            else
+                save(savename, 'larvae')
+            end
+        end
+
+        disp([d(x(k)).name(end-15:end-4), ' is done']);
     end  % end expt loop
 end  % end base folder loop
 
