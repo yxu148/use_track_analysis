@@ -456,6 +456,25 @@ sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, nperiod, response
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\v_ton_stim_individual');
 savefig(gcf, savename); 
 
+
+%% Body angle
+% Body angle of single larvae verses time in period
+j = 1;  % track number
+theta_frame = eset.expt.track(j).dq.sbodytheta * 180 / pi;  % degree 0-360
+toff_frame = eset.expt.track(j).dq.led12Val_toff;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+stepsize = 0.1;  % to get one average speed for stepsize seconds
+[x_toff,y_theta, stderror] = meanyvsx(toff_frame, theta_frame, 0:stepsize:tperiod);
+uppercurve = y_theta + 0.5*stderror;
+lowercurve = y_theta - 0.5*stderror;
+x_tofill = [x_toff, fliplr(x_toff)];  % the x axis of the ploygon to fill
+y_tofill = [lowercurve, fliplr(uppercurve)];
+figure;
+pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+plot(x_toff, y_theta, 'Color', 0.2*[1 1 1]);
+xline(9, '--'); hold off;
+xlabel('toff (s)'); ylabel(['Body angle of track ', num2str(j), ' (^o)']);
+
+%% Other functions
 % to save some variables into a file, so that data of multiple files can be
 % plotted together when load the data
 % turnStart_total.(['turnStart', num2str(d(x).name(end-15:end-4))]) = turnStart;
