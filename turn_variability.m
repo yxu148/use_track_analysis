@@ -57,7 +57,7 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_headSwing
 savefig(gcf, savename); 
 
 
-%% Probability of Rurn
+%% Probability of turn
 
 % Probability of start to turn in one period for each track
 figure;
@@ -123,8 +123,13 @@ tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 turnStart_mean = zeros(1, length(xbar));  % the average turnTime that falls to one bin
-turnStart_str = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
-load(strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat'), 'larvae');
+turnStart_std = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+if isfile(savename)
+    load(savename, 'larvae');
+else
+    clear larvae;
+end
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
     for j = 1 : length(t)
         % 'led2Val_ton' fails some time if stimulation isn't strict square wave
@@ -150,36 +155,40 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
             turnStart_bin = turnStart((turnStart > edges(r)) & (turnStart < edges(r+1)));
             turnStart_mean(r) = mean(turnStart_bin);
 %             turnStart_str(r) = std(turnStart_bin, 1) / sqrt(N(r));  % standard error
-            turnStart_str(r) = std(turnStart_bin, 1);
+            turnStart_std(r) = std(turnStart_bin, 1);
         end
         bar(xbar, N/nperiod, 1); hold on; % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
         errorbar(turnStart_mean, N/nperiod, sqrt(N)/nperiod / 2, 'b.'); % the length of the error bar is the error.
-        errorbar(turnStart_mean, N/nperiod, turnStart_str/2, 'horizontal', 'k.'); hold off;
+        errorbar(turnStart_mean, N/nperiod, turnStart_std/2, 'horizontal', 'k.'); hold off;
         xticks(edges); ylim([0, 1]); xline(6, '--');
         
         
 %         % save info into a new structure larvae
         larva_index = ['larva', num2str(j)];
-%         larvae.(larva_index).trackNum = t(j).trackNum;  % integer
-%         larvae.(larva_index).expt_info = d(x).name(1:end-4);  % string
-%         larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
-%         larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
-%         larvae.(larva_index).c.(stim_color{i}) = sqrt(N)/nperiod;
-%         larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
-%         if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
-%             larvae.(larva_index).response.(stim_color{i}) = '1';
-%         elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
-%             larvae.(larva_index).response.(stim_color{i}) = '1';
-%         else
-%             larvae.(larva_index).response.(stim_color{i}) = '0';
-%         end
+        larvae.(larva_index).trackNum = t(j).trackNum;  % integer
+        larvae.(larva_index).expt_info = d(x).name(1:end-4);  % string
+        larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
+        larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
+        larvae.(larva_index).pturn_error.(stim_color{i}) = sqrt(N)/nperiod;
+        larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
+        larvae.(larva_index).turnStartTime = turnStartTime;
+        larvae.(larva_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
+        larvae.(larva_index).turnStart_std.(stim_color{i}) = turnStart_std;
+        if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
+            larvae.(larva_index).response.(stim_color{i}) = '1';
+        elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
+            larvae.(larva_index).response.(stim_color{i}) = '1';
+        else
+            larvae.(larva_index).response.(stim_color{i}) = '0';
+        end
 
-        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+%         title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)) ')']);
     end
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Starting to Turn'); 
-sgtitle('(Track number, Number of Stimulation, Number of Turn, Response)');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_all_errorbar');
+sgtitle('Stimulation (Track number, Number of Stimulation, Number of Turn, Response)');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_ton');
 savefig(gcf, savename); 
 
 % Histogram of probability difference before and after stimulation
@@ -288,10 +297,10 @@ for i = 1: length(t_stim_start)
     ax(i) = subplot(length(t_stim_start),1,i);
     plot(time_timestep, turnrate); xline(9, 'k--');
     xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
-    title([num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
-end
+    title([stim_color{i}, ', ', num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
+end  % end looping t_stim_start
 sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_period_no_pause');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_toff');
 savefig(gcf, savename); 
 
 
@@ -373,7 +382,7 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
         turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
         time_timestep = (0 : fix(tperiod/stepsize)) * stepsize;
         plot(time_timestep, turnrate); xline(6, 'k--');
-        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(length(turnStart)), ')']);
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
         
         % add new contents to the structure larvae
         larva_index = ['larva', num2str(j)];
@@ -381,14 +390,29 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
     end
 end
 linkaxes(ax, 'y');  % align subplots with y axis
-xlabel(ax(1), 'ton (s)'); ylabel(ax(1), 'Turn rate (min^{-1})'); sgtitle(['Stepsize = ', num2str(stepsize), ', binsize = ', num2str(binsize), ' (track number, number of period, number of turn)']);
+xlabel(ax(1), 'ton (s)'); ylabel(ax(1), 'Turn rate (min^{-1})'); sgtitle(['Stepsize = ', num2str(stepsize), ', binsize = ', num2str(binsize), ' (track number, number of period, number of turn, response)']);
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton_individual');
 savefig(gcf, savename); 
 
 
 %% Speed
-% speed of run track part verses the index of run
-figure; v_mean_run = t(1).getSubFieldDQ('run', 'speed', 'position', 'mean') * 60 ; plot(v_mean_run);
+
+% speed of run verses time in period of single larva
+j = 1;  % track number
+t = eset.expt.track;
+stepsize = 0.1;  % second
+v_run = t(j).getSubFieldDQ('run', 'speed') * 60 ;  % cm/min, speed of every frame when larva is running
+t_run = t(j).getSubFieldDQ('run', 'led12Val_ton');  % second
+[x_ton,y_v, ~, stdev] = meanyvsx(t_run, v_run, 0 : stepsize : tperiod);
+uppercurve = y_v + 0.5*stdev;
+lowercurve = y_v - 0.5*stdev;
+x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
+y_tofill = [lowercurve, fliplr(uppercurve)];
+figure; 
+pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); 
+xline(6, '--'); xlim([0, tperiod]); hold off;
+xlabel('Time in period (s)'); ylabel('Speed of run (cm/min)'); title(['Stepsize ', num2str(stepsize), ' s'])
 
 
 % speed of single larvae verses experimental time
@@ -402,25 +426,22 @@ plot(turnStartTime, 0.3, 'ok'); hold off; legend('Speed', 'Turn start')
 xlabel('Time (s)'); ylabel('Speed (cm/min)'); title(['Track ', num2str(j)])
 
 
-
-
-
-
 % speed of single larvae verses time in period
-j = 2;  % track number
+j = 1;  % track number
 v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
-toff_frame = eset.expt.track(j).dq.led12Val_toff;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+ton_frame = eset.expt.track(j).dq.led12Val_ton;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
 stepsize = 0.1;  % to get one average speed for stepsize seconds
-[x_toff,y_v, stderror] = meanyvsx(toff_frame, v_frame, 0:stepsize:tperiod);
-uppercurve = y_v + 0.5*stderror;
-lowercurve = y_v - 0.5*stderror;
-x_tofill = [x_toff, fliplr(x_toff)];  % the x axis of the ploygon to fill
+[x_ton,y_v, ~, stdev] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);
+uppercurve = y_v + 0.5*stdev;
+lowercurve = y_v - 0.5*stdev;
+x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
 y_tofill = [lowercurve, fliplr(uppercurve)];
 figure;
 pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
-plot(x_toff, y_v, 'Color', 0.2*[1 1 1]); 
-xline(10, '--'); hold off;
-xlabel('Time toff in period (s)'); ylabel(['Speed of track ', num2str(j), ' (cm/min)']);
+plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); 
+xline(9, '--'); hold off;
+xlabel('Time toff in period (s)'); ylabel(['Speed of track ', num2str(j), ' (cm/min)']); 
+title(['Stepsize ', num2str(stepsize), ' s'])
 
 % average speed of all tracks verses time in period at certain period of time/stimulation condition
 v_all = eset.gatherField('speed') * 60;  % cm/min
@@ -487,18 +508,22 @@ for i = 1: length(t_stim_start)
         v_frame = t(j).dq.speed * 60;  % cm/min
         ton_frame = t(j).dq.led12Val_ton;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
         t_frame = t(j).dq.eti;
-        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
+        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_end(i)
         v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
         ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
         %number of period of stimulation that falls into certain intensity
-        t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
-        t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
-        nperiod = (t_end - t_start) / tperiod;
+        if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
+            t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+            t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+            nperiod = (t_end - t_start) / tperiod;
+        else 
+            nperiod = 0;
+        end
         index_subplot = j + (i-1)*length(t);
         ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
-        [x_ton,y_v, ~, stderror] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);  % std
-        uppercurve = y_v + 0.5*stderror;
-        lowercurve = y_v - 0.5*stderror;
+        [x_ton,y_v, ~, stdev] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);  % std
+        uppercurve = y_v + 0.5*stdev;
+        lowercurve = y_v - 0.5*stdev;
         x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
         y_tofill = [lowercurve, fliplr(uppercurve)];
         pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
@@ -508,8 +533,9 @@ for i = 1: length(t_stim_start)
         % add new contents to the structure larvae
         larva_index = ['larva', num2str(j)];
         larvae.(larva_index).speed.(stim_color{i}) = y_v;
+        larvae.(larva_index).speed_std.(stim_color{i}) = stdev;
 
-        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
 
     end
 end
@@ -517,6 +543,63 @@ sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, nperiod, response
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\v_ton_stim_individual');
 savefig(gcf, savename); 
 
+
+
+% Run speed of each long track at a certain period of time of stimulation
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+if isfile(savename)
+    load(savename, 'larvae');
+else
+    clear larvae;
+end
+figure; stepsize = 0.1;  % to get one average speed for stepsize seconds
+% only keep the speed whose start time falls into the i-th intensity of stimulation
+for i = 1: length(t_stim_start)
+    for j = 1: length(t)
+        v_frame = t(j).getSubFieldDQ('run', 'speed') * 60 ;  % cm/min, speed of every frame when larva is running
+        ton_frame = t(j).getSubFieldDQ('run', 'led12Val_ton');  % second
+        t_frame = t(j).getSubFieldDQ('run', 'eti');
+        
+        % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
+        if i < length(t_stim_start)
+            v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+            ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+        else
+            v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame <= t_stim_end(i)));
+            ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame <= t_stim_end(i)));
+        end
+
+        %number of period of stimulation that falls into certain intensity
+        if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
+            t_start = max([t_stim_start(i), eset.expt.elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+            t_end = min([t_stim_end(i), eset.expt.elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+            nperiod = (t_end - t_start) / tperiod;
+        else 
+            nperiod = 0;
+        end
+        index_subplot = j + (i-1)*length(t);
+        ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
+        [x_ton,y_v, ~, stdev] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);  % std
+        uppercurve = y_v + 0.5*stdev;
+        lowercurve = y_v - 0.5*stdev;
+        x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
+        y_tofill = [lowercurve, fliplr(uppercurve)];
+        pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+        plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); xline(6, '--'); hold off;
+        xlabel('ton (s)'); ylabel('Run speed (cm/min)');
+
+        % add new contents to the structure larvae, or read info from
+        % larvae
+        larva_index = ['larva', num2str(j)];
+        larvae.(larva_index).speed_run.(stim_color{i}) = y_v;
+
+        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+
+    end
+end
+sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, nperiod, response)']);  linkaxes(ax, 'y');  % align subplots with y axis
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\vRun_ton_stim_individual');
+savefig(gcf, savename); 
 
 %% Body angle
 % Body angle of single larvae verses time in period
@@ -544,8 +627,9 @@ xlabel('toff (s)'); ylabel(['Body angle of track ', num2str(j), ' (^o)']);
 % nperiod_array_1 = nperiod_array;
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 
-save(savename, 'turnStart', 'nperiod')
-save(savename, 'turnStart', 'nperiod', '-append')
+% save(savename, 'turnStart', 'nperiod')
+% save(savename, 'turnStart', 'nperiod', '-append')
+
 if isfile(savename)
     save(savename, 'larvae', '-append')
 else
@@ -591,7 +675,7 @@ width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read 
 height = 2048;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-track_path = stitched_track_index(7 : end);  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
+track_path = [7];  % index of track to plot, could be [1], or [1, 3, 8], or stitched_track_index(7 : end)-----------------------------
 figure; 
 eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
@@ -629,3 +713,8 @@ save(savename, 'collision_events')  % run this at the first time to create new s
 save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
 % save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 
+
+
+%% copy this file to the results folder
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)]);
+copyfile('turn_variability.m', savename)
