@@ -112,23 +112,21 @@ width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read 
 height = 2048;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-for j = [1, 8, 9, 14, 15]
-    track_path = [1, 8, 9, 14, 15];  % index of track to plot, could be [1], or [1, 3, 8], [j] -----------------------------
-    figure; 
-    eset.expt.track.plotPath('sloc', 'color', 0.8*[1, 1, 1], 'LineWidth', 2); hold on;  % the larger the whiter
-    for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
-        eset.expt.track(track_path(i)).plotPath('sloc', color_pad(i), 'LineWidth', 2);   hold on;  % 
-        xy_s = eset.expt.track(track_path(i)).getDerivedQuantity('sloc');
-        plot(xy_s(1, 1), xy_s(2, 1), append('o', color_pad(i)));  % o marks start
-        plot(xy_s(1, end), xy_s(2, end), append('x', color_pad(i)));  % x marks end
-    end
-    rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
-    axis equal;  % use the same length for data unit
-    title(['Path of tracks ', num2str(track_path), ', with color ', color_pad(1: length(track_path)) ]); xlabel('x (cm)'); ylabel('y (cm)'); hold off;
-    savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\path_of_track', num2str(track_path(1))]);
-    savefig(gcf, savename); 
-    % saveas(gcf, savename, 'png');
+track_path = [1, 8, 9, 14, 15];  % index of track to plot, could be [1], or [1, 3, 8], [j] -----------------------------
+figure; 
+eset.expt.track.plotPath('sloc', 'color', 0.8*[1, 1, 1], 'LineWidth', 2); hold on;  % the larger the whiter
+for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
+    eset.expt.track(track_path(i)).plotPath('sloc', color_pad(i), 'LineWidth', 2);   hold on;  % 
+    xy_s = eset.expt.track(track_path(i)).getDerivedQuantity('sloc');
+    plot(xy_s(1, 1), xy_s(2, 1), append('o', color_pad(i)));  % o marks start
+    plot(xy_s(1, end), xy_s(2, end), append('x', color_pad(i)));  % x marks end
 end
+rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
+axis equal;  % use the same length for data unit
+title(['Path of tracks ', num2str(track_path), ', with color ', color_pad(1: length(track_path)) ]); xlabel('x (cm)'); ylabel('y (cm)'); hold off;
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\path_of_track', num2str(track_path(1))]);
+savefig(gcf, savename); 
+saveas(gcf, savename, 'png');
 
 track_path = [1, 8, 9, 14, 15];  % index of track to plot, could be [1], or [1, 3, 8]
 for j = track_path  % the one track to plot
