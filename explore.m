@@ -6,10 +6,10 @@ led2Val_high = eset.gatherField('led2Val_high');  % 1 for high, 0 for low of Blu
 led2Val_ton = eset.gatherField('led2Val_ton');  % 1 for high, 0 for low of Blue Light intensity (PWM) of LED at each frame
 
 % To read BIN file:
-fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\test\NA@NA\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202311220944\NA@NA_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202311220944 led1 values.bin');
+fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3__202404031222 sup data dir\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3__202404031222 led1 values.bin');
 A = fread(fileID);
 fclose(fileID);
-fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\test\NA@NA\T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3\202311220944\NA@NA_T_Re_Sq_318to532P_20_1_3#T_Bl_Sq_2,5to6P_20_2_3_202311220944 led2 values.bin');
+fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\stimulus control\bin files\variability\6s_on_9s_off\no rest\100    0  100    0_50   0  50   0\variable_total2400s_high6s_low9s_intensity100    0  100    0_50   0  50   0.bin');
 B = fread(fileID2);
 fclose(fileID2);
 figure; plot(A, 'r'); hold on; plot(B, 'b'); hold off;
@@ -29,6 +29,8 @@ vt = eset.expt(1).track(1).getDerivedQuantity('vtail');  % velocity of the tail
 tx = eset.expt(1).track(1).getDerivedQuantity('eti');  % time
 ih = eset.expt(1).track(1).getDerivedQuantity('ihead');  % x and y pos of the head, in cm
 it = eset.expt(1).track(1).getDerivedQuantity('itail');  % x and y pos of the tail
+x2 = expt.track(k).fieldAtTime('sloc', t);  % get the smoothed location of track k at time t
+inds = expt.track(k).indsAtTime([t1, t2]);  % get the indexes of track k at time t1, t2.
 iiscollede = eset.expt.track(2).getDerivedQuantity('iiscollision');  % interpolated iscollision
 % tderiv = 0.9;  % defines derivative time
 % vh = deriv(ih, tderiv/eset.expt(1).dr.interpTime); 
@@ -69,12 +71,12 @@ plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel
 
 % plot video, is running the function in @MaggotTrack
 % time in second, frameRate default to be 20 Hz,
-figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 0, 'stopTime', 30)
+figure; eset.expt.track(7).playMovie('frameRate', 50, 'startTime', 1000, 'stopTime', 1300)
 % For now always indicate 'vidObj' to be able to view the video.
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\video');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track7');
 videoObject = VideoWriter(savename);
 open(videoObject);
-figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 0, 'stopTime', 5, 'vidObj', videoObject)
+figure; eset.expt.track(7).playMovie('frameRate', 50, 'startTime', 1200, 'stopTime', 1300, 'vidObj', videoObject)
 close(videoObject);
 stitched_tracks = find([eset.expt.track.nt] ~=1);  % indexes of stitched tracks
 
