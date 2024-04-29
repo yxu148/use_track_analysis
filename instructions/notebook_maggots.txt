@@ -66,6 +66,22 @@ The video won't play without saving when running playMovie(). For now, saving th
 
 Go to check how does the standard error is plotted in function makeReorientationHistogram. It uses eset.expt(1).dr.interpTime. Check what does the derviation rule (dr) means.
 
+% fieldname could be any property of MaggotTrack (run eset.expt(1).track(1) to see what are there), 
+% or derived quantity of the track (run eset.expt(1).track(1).dq to see what are there)
+eset.gatherField('fieldname');  % get the fieldname of all tracks of all expts in the eset
+eset.expt.gatherField('fieldname');  % get the fieldname of all tracks in the expt of eset
+eset.expt(1).track(1).getSubFieldDQ(subfield, derivedQuantityName, varargin);  % get the dq quantities of the track(1) under certain condition (varargin)
+eset.gatherFromSubField(subfield, derivedQuantityName, varargin);  % get the dq quantities of all tracks of all expts of the eset under certain condition (varargin)
+eset.expt(1).gatherFromSubField(subfield, derivedQuantityName, varargin);  % get the dq quantities of all tracks of expt(1) under certain condition (varargin)
+
+processBIN.m has input-parameters 'frameDiff' and 'maxDist' used for stitching colliding tracks, it passes the parameters and calls
+	\automate\processToMatfiles_gershow.m, which passes the parameters and calls
+		\@ExperimentSet\processDirectoryToMatfiles.m, which passes the parameters and input new parameters 'interactive' and 'stitchcollisions', and calls
+			\@Experiment\stitchTracks.m, which calls 
+				\@Experiment\detectCollisions.m (passing 'maxDist') to create new field iscollision for all tracks, and
+				\@Track\merge.m (passing 'maxDist' and 'frameDiff') to modifiy track1 based on its following part, track2, by redefining track.pt, track.npts, track.nt, track.locInFile, track.iscollision(Yiming added), track.endFrame, and calls
+					\@Track\calculateDerivedQuantity.m to calculate iiscollision based on iscollision
+						
 
 
 
@@ -125,3 +141,5 @@ On the same PC, if the first person's account is opening the 'coordinated led co
 If running test experiment without any larva, the processBIN won't succeed. Therefore at least use some larvae to test.
 
 After put black agar plate to the right place, wait a few minutes after all dusts falling down to start acquization. Otherwise too many bad tracks will fail to process BIN
+
+Should run processMMF.m from its directory.
