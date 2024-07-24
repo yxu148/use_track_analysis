@@ -397,6 +397,16 @@ savefig(gcf, savename);
 
 %% Speed
 
+% speed of run verses time in experiment of single larvae
+j = 1;  % track number
+t = eset.expt.track;
+stepsize = 0.1;  % second
+v_run = t(j).getSubFieldDQ('run', 'speed') * 60 ;  % cm/min, speed of every frame when larva is running
+t_run = t(j).getSubFieldDQ('run', 'eti');  % second
+figure; plot(t_run, v_run);
+xlabel('Time (s)'); ylabel('Run Speed (cm/min)'); title(['Track ', num2str(j)])
+
+
 % speed of run verses time in period of single larva
 j = 1;  % track number
 t = eset.expt.track;
