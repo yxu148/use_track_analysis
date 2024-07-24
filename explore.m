@@ -76,7 +76,13 @@ figure; eset.expt.track(7).playMovie('frameRate', 50, 'startTime', 1000, 'stopTi
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track7');
 videoObject = VideoWriter(savename);
 open(videoObject);
-figure; eset.expt.track(7).playMovie('frameRate', 50, 'startTime', 1200, 'stopTime', 1300, 'vidObj', videoObject)
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 600, 'stopTime', 650, 'vidObj', videoObject)
+close(videoObject);
+% with esets
+savename = strcat(basedir,['\results', d(x(6)).name(end-16:end-4)], '\track1_2');
+videoObject = VideoWriter(savename);
+open(videoObject);
+figure; esets.eset1.expt(6).track(1).playMovie('frameRate', 50, 'startTime', 530 , 'stopTime', 560, 'vidObj', videoObject)
 close(videoObject);
 stitched_tracks = find([eset.expt.track.nt] ~=1);  % indexes of stitched tracks
 
