@@ -5,6 +5,7 @@ disp('Loading data...');
 x = [1];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
 pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
+download = true;  % if true, plot and save basic figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 tperiod = 15;  % depend on the name of .mat file loaded, '_18_', or from the plot led2Val-Time-----------------
 
 % load .mat files containing track information into eset
@@ -56,35 +57,24 @@ GQtoff = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {
 % hold on;
 % plot(GQtoff.xData, GQtoff.yData + 60);
 % hold off;
+%% plot basic graphs
+if download
+    % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
+    figure;
+%     plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
+    plot(GQled2Val.xData/60, GQled2Val.yData, 'b'); hold on;
+    plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold off;
+%     plot(GQled2Val.xData/60, GQtoff.yData + 60, 'k'); hold off;
+    xlabel('Time (min)'); legend('led2Val', 'toff');
+    pause;
+    savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\led12Val_toff');
+    savefig(gcf,savename);
+    close;
+end
 
-% correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
-figure;
-plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
-plot(GQled2Val.xData/60, GQled2Val.yData, 'b');
-plot(GQled2Val.xData/60, GQtoff.yData, 'k');
-plot(GQled2Val.xData/60, GQtoff.yData + 60, 'k'); hold off;
-xlabel('Time (min)'); legend('led1Val','led2Val', 'toff');
-pause;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\led12Val_toff');
-savefig(gcf,savename);
-% close;
 
 disp(['Time for one frame is ', num2str(eset.expt.elapsedTime(2)), ' s']);
 Ntracks = size(eset.expt(1).track);  % 1-by-Number_of_Tracks ( number of maggots)
-figure;
-histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), 0:10:121);  % round 60.001 to 60
-xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(eset.expt(1).track)), ' Tracks']);
-pause;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_length');
-savefig(gcf,savename);
-% close;
-
-% paramerters when generating BIN files of stimulation --------------------
-t_stim_start = [0, 300, 600, 900, 1200, 1500];  % start time (s) of each intensity of stimulation
-t_stim_end = [300, 600, 900, 1200, 1500, 1800];
-stim_color = {'blue1', 'red1', 'bluered1', 'blue2', 'red2', 'bluered2'};  % descripiton of the t_stim_start
-frame_rate = 20;  % number of frames per second
-
 % To save longer tracks in t
 nperiods = 100;  % select tracks that have [nperiods, Np eriods] length
 Nperiods = 121;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
@@ -95,17 +85,28 @@ maxNpoints = Nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.e
 disp(['There are still ', num2str(nnz((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints))), ' tracks left']);  % nnz (number of nonzero elements)
 t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
 disp('The filtered tracks are stored in t');
+if download
+    figure;
+    histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), 0:10:(Nperiods+1));  % round 60.001 to 60
+    xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(eset.expt(1).track)), ' Tracks']);
+    pause;
+    savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_length');
+    savefig(gcf,savename);
+    close;
+end
 
 
 % plot start time and end time of all tracks
-figure;
-for j = 1: length(eset.expt.track)
-        plot(eset.expt.track(j).startFrame + 1, j, 'bo'); hold on;
-        plot(eset.expt.track(j).endFrame, j, 'rx'); hold on;
+if download
+    figure;
+    for j = 1: length(eset.expt.track)
+            plot(eset.expt.track(j).startFrame + 1, j, 'bo'); hold on;
+            plot(eset.expt.track(j).endFrame, j, 'rx'); hold on;
+    end
+    xlabel('Frame number'); ylabel('Index of tracks'); hold off; pause;
+    savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_start_end');
+    savefig(gcf, savename); close;
 end
-xlabel('Frame number'); ylabel('Index of tracks'); hold off;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_start_end');
-savefig(gcf, savename); 
 
 
 % plot the number of recognized maggots verses frame. Maggots in collision,
@@ -117,10 +118,18 @@ for j = 1:length(eset.expt.track)
     ntracks_frame(start_frame_tracks(j) : end) = ntracks_frame(start_frame_tracks(j) : end) + 1;
     ntracks_frame(end_frame_tracks(j) : end) = ntracks_frame(end_frame_tracks(j) : end) - 1;
 end
-figure; plot(ntracks_frame);
-xlabel('Frame number'); ylabel('Number of recognized maggots');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_maggots_recognized');
-savefig(gcf, savename); 
+if download
+    figure; plot(ntracks_frame);
+    xlabel('Frame number'); ylabel('Number of recognized maggots'); pause;
+    savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\num_maggots_recognized');
+    savefig(gcf, savename); close;
+end
+
+
+t = eset.expt.track;
+minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
+t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
+disp([num2str(length(t)), ' long tracks out of ', num2str(length(eset.expt(1).track)), ' tracks, from ', num2str(max(ntracks_frame)), ' moving maggots']);
 
 
 % copy this file to the results folder
