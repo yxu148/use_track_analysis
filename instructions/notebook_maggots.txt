@@ -81,7 +81,19 @@ processBIN.m has input-parameters 'frameDiff' and 'maxDist' used for stitching c
 				\@Experiment\detectCollisions.m (passing 'maxDist') to create new field iscollision for all tracks, and
 				\@Track\merge.m (passing 'maxDist' and 'frameDiff') to modifiy track1 based on its following part, track2, by redefining track.pt, track.npts, track.nt, track.locInFile, track.iscollision(Yiming added), track.endFrame, and calls
 					\@Track\calculateDerivedQuantity.m to calculate iiscollision based on iscollision
-						
+Only stitched tracks have iscollision, other tracks' iscollision is empty. Run
+	eset.expt.track(stitched_track_index).getDerivedQuantity('iiscollision');
+to create a derived quantity iiscollision and save in track(stitched_index).dq.iiscollision						
+
+To change the clean method
+processBIN.m has variable processingOptions, you can edit parameters    and which is used in 
+	\automate\processToMatfiles_gershow.m which pass the parameters to
+		\@ExperimentSet\processDirectoryToMatfiles calls function ESetCleaner and use the parameters to clean
+			\@ESetCleaner\ESetCleaner.m which receive cleaning rules and call clean in
+				\@ESetCleaner\clean.m to remove invalid tracks.
+
+
+
 
 
 
