@@ -444,6 +444,21 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         end  % end plotting speed_run_individual
 
 
+        if track_info
+            % Track info [track_ID, startFrame, startX(pixel), endY(pixel), endFrame,
+            % endX(pixel), endY(pixel)]
+            trackInfo = [];
+            t = esets.(eset_name).expt(k).track;
+            for j = 1: length(t)
+                startFrame = t(j).startFrame;
+                startLoc = transpose(camPtsFromRealPts(esets.(eset_name).expt(k).camcalinfo, t(j).pt(1).loc));  % [x, y]
+                endFrame = t(j).endFrame;
+                endLoc = transpose(camPtsFromRealPts(esets.(eset_name).expt(k).camcalinfo, t(j).pt(end).loc));  % [x, y]
+                trackInfo = [trackInfo; j, startFrame, startLoc, endFrame, endLoc];
+            end
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], ['\trackInfo', d(x(k)).name(end-16:end-4), '.csv']);
+            writematrix( trackInfo, savename)
+        end
 
 
         if save_data
