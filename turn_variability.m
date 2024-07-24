@@ -1,6 +1,6 @@
-ntracks =52;  % number of tracks to plot ---------------------------
-n = 4;  % --------------------------row
-m = fix(ntracks/n);  % m-by-n subplot ---------------
+ntracks =5;  % number of tracks to plot ---------------------------
+n = 3;  % --------------------------row
+m = fix(ntracks/n)+1;  % m-by-n subplot ---------------
 tbin = 1;  % bin size of [0, tperiod], for histogram
 stepsize = 0.2; binsize = 2;  % for rate
 
@@ -64,23 +64,22 @@ figure;
 tbin = 3;  edges = [0:tbin: tperiod];
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-ymax=0;
-for j = 1 : ntracks
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, toff means period starts with light off
+for j = 1 : length(t)
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, toff means period starts with light off
     %number of cycle for all points in the track, start with light on
-    nperiod = max(t(j).getDerivedQuantity('led2Val_cyclenum_on')) - min(t(j).getDerivedQuantity('led2Val_cyclenum_on'));
+    t_start = eset.expt.elapsedTime(t(j).startFrame + 1);  % time (s) of start for track j under i-th  intensity of stimulation 
+    t_end = eset.expt.elapsedTime(t(j).endFrame);
+    nperiod = (t_end - t_start) / tperiod;
     ax(j) = subplot(m,n,j);
     [N, e] = histcounts(turnStart, edges);  % make sure larvae can only turn one time within tbin
     bar(xbar, N/nperiod, 1);  % the value at [10, 13], describe the  possibility of turning within 2 seconds after stimulation
-    if N/nperiod > ymax
-        ymax = N/nperiod;
-    end
-    xticks(edges);  ylim([0, 0.4]);  % comment ylim first, change to ymax at the second run --------------
+    xline(6, '--');
+    xticks(edges);  ylim([0, 1]);  % comment ylim first, change to ymax at the second run --------------
     title(['Track ', num2str(t(j).trackNum), ' (', num2str(nperiod), ', ', num2str(sum(N)), ')']);
 end
 xlabel(ax(1), 'Time in period (s)'); ylabel(ax(1), 'Probability of Start Turning'); 
 sgtitle('(Number of Stimulation, Number of Turn)');
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_no_pause_ton');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\p_turn_ton');
 savefig(gcf, savename); 
 
 
@@ -118,6 +117,9 @@ savefig(gcf, savename);
 
 % Probability of start to turn in one period for each track
 % Variability, each track in each column, each period in each row
+t = eset.expt.track;
+minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
+t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
 figure;
 tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
@@ -133,7 +135,7 @@ end
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
     for j = 1 : length(t)
         % 'led2Val_ton' fails some time if stimulation isn't strict square wave
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
         %number of period of stimulation that falls into certain intensity
@@ -182,7 +184,7 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
             larvae.(larva_index).response.(stim_color{i}) = '0';
         end
 
-        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
 %         title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)) ')']);
     end
 end
@@ -255,7 +257,7 @@ figure;
 for j = 1 : ntracks
     % return the numbe-th of ton
     nperiod = max(t(j).getDerivedQuantity('led2Val_cyclenum_on')) - min(t(j).getDerivedQuantity('led2Val_cyclenum_on'));
-    turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'position', 'start');  % time in period
+    turnStart =  t(j).getSubFieldDQ('reorientation', 'led1Val_ton', 'position', 'start');  % time in period
     % turnStart = turnStart([t(j).reorientation.startInd] < t_work*frame_rate);  % only keey the reorientation whose start frame number is less than some value
     turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) / nperiod * 60;  % per min if t is in second
     Nturn = nnz(turnStart>=0 & turnStart<=tperiod) ;
@@ -283,7 +285,7 @@ for i = 1: length(t_stim_start)
         % turn start time (second) of track j, excluding pause
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
         % turn start time in period (second) of track j, excluding pause, start from intensity low. 
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
         % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
         turnStart_total = [turnStart_total turnStart];  % to contain more turnStart after each loop of j
@@ -355,20 +357,23 @@ time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
 plot(time_timestep, turnrate);
 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
 title([num2str(fix(nperiod)), ' nperiods, ',num2str(length(turnStart)),  ' turns, Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff_no_pause');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_all_toff');
 savefig(gcf, savename); 
 
 
 % Turn rate in period for each long track
 % Variability, each track in each column, each stimulation period in each row
 % save info into a existing structure larvae
+t = eset.expt.track;
+minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
+t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 load(savename, 'larvae');
 figure;
 stepsize = 0.1; binsize = 0.5;
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
     for j = 1 : length(t)  % j-th track
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
         %number of period of stimulation that falls into certain intensity
@@ -382,11 +387,13 @@ for i = 1 : length(t_stim_start)  % ith intensity of stimulation----------------
         turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
         time_timestep = (0 : fix(tperiod/stepsize)) * stepsize;
         plot(time_timestep, turnrate); xline(6, 'k--');
-        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
-        
+
         % add new contents to the structure larvae
         larva_index = ['larva', num2str(j)];
         larvae.(larva_index).turnrate.(stim_color{i}) = turnrate;
+
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+
     end
 end
 linkaxes(ax, 'y');  % align subplots with y axis
@@ -505,6 +512,9 @@ savefig(gcf, savename);
 
 
 % speed of each long track at a certain period of time of stimulation
+t = eset.expt.track;
+minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
+t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 if isfile(savename)
     load(savename, 'larvae');
@@ -545,7 +555,7 @@ for i = 1: length(t_stim_start)
         larvae.(larva_index).speed.(stim_color{i}) = y_v;
         larvae.(larva_index).speed_std.(stim_color{i}) = stdev;
 
-        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+        title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
 
     end
 end
@@ -603,7 +613,7 @@ for i = 1: length(t_stim_start)
         larva_index = ['larva', num2str(j)];
         larvae.(larva_index).speed_run.(stim_color{i}) = y_v;
 
-        title(['(', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+        title(['(', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
 
     end
 end
@@ -679,13 +689,43 @@ savefig(gcf, savename);
 
 
 
+% Find the collision location and time, and save collision_events, with each event collede from (t1, x1, y1) to (t2, x2, y2)
+% [track_ID, t1(frame), x1(pixel), y1(pixel), x1(cm), y1(cm), t2(frame), x2(pixel), y2(pixel), x2(cm), y2(cm); ...]
+% Use the interpolated iscollision, so the time is interpolated; Use the smoothed location
+% Each track could have multiple collisions, ordered by
+%[track-j_collision1; track-j_collision2; ...]
+stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened, whose nt(number of tracks) ~= 1.
+collision_events = [];  % [track_ID, t1(frame), x1(pixel), y1(pixel), x1(cm), y1(cm), t2(frame), x2(pixel), y2(pixel), x2(cm), y2(cm)] for one collision event from (t1, x1, y1) to (t2, x2, y2)
+for j = 1 : length(stitched_track_index)  % loop all stitched tracks
+    eset.expt.track(stitched_track_index(j)).getDerivedQuantity('iiscollision');  % calculate the interpolated iscollision
+    frames_collision = find(eset.expt.track(stitched_track_index(j)).dq.iiscollision);  % frames that collision is in progress
+    frame_collision_start = frames_collision([true, diff(frames_collision) ~= 1]);  % [collision 1 start frame, collision 2 start frame, ...]
+    frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);  % this collision end frame will be off a lot
+    loc_collision_start_cm = [eset.expt.track(stitched_track_index(j)).dq.sloc(:, frame_collision_start)];  % [collision 1 start x, collision 2 start x, ... ; collision 1 start y, collision 2 start y, ...] in cm
+    loc_collision_start_pixel = camPtsFromRealPts(eset.expt.camcalinfo, loc_collision_start_cm);  % [x1, x2, ...; y1, y2, ...] in pixel
+    loc_collision_end_cm = [eset.expt.track(stitched_track_index(j)).dq.sloc(:, frame_collision_end)];  % [collision 1 end x, collision 2 end x, ... ; collision 1 end y, collision 2 end y, ...] in cm
+    loc_collision_end_pixel = camPtsFromRealPts(eset.expt.camcalinfo, loc_collision_end_cm);  % [x1, x2, ...; y1, y2, ...] in pixel
+    % collision event(s) for this single track, [track_1, t1_start(frame), x1_start(pixel), y1_start(pixel), x1_start(cm), y1_start(cm), t1_end(frame), x1_end(pixel), y1_end(pixel), x1_end(cm), y1_end(cm); second collision event; ...]
+    collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(frame_collision_start), transpose(loc_collision_start_pixel), transpose(loc_collision_start_cm),...
+        transpose(frame_collision_end), transpose(loc_collision_end_pixel), transpose(loc_collision_end_cm)];
+    collision_events = [collision_events; collision_event];  % combine collision events of different tracks together
+end
+% collision_events = fix(collision_events);  % change from double to integer
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
+if isfile(savename)
+    save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
+else
+    save(savename, 'collision_events')  % run this at the first time to create new saving file
+end
 
-% Plot one or multiple tracks to determine which to stitch
-width = 2048;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read from Image Recorder front panel
-height = 2048;  % in pixel, in y-axis
+
+
+% Plot one or multiple stitched, smoothed tracks, with smoothed start, end, start_collision, end_collision locations
+width = 1920;  % in pixel, in x-axis, geometry of Region of Interest (ROI) read from Image Recorder front panel
+height = 1920;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'k', 'c', 'm', 'y'];
-track_path = [7];  % index of track to plot, could be [1], or [1, 3, 8], or stitched_track_index(7 : end)-----------------------------
+track_path = [1];  % index of track to plot, could be [1], or [1, 3, 8], or stitched_track_index(7 : end)-----------------------------
 figure; 
 eset.expt.track.plotPath('sloc', 'color', [0.8, 0.8, 0.8]); hold on;  % the larger the whiter
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
@@ -693,29 +733,17 @@ for i = 1 : length(track_path)  %  The index of track to plotPath, should be sho
     xy_s = eset.expt.track(track_path(i)).getDerivedQuantity('sloc');
     plot(xy_s(1, 1), xy_s(2, 1), append('o', color_pad(i)));  % o marks start
     plot(xy_s(1, end), xy_s(2, end), append('x', color_pad(i)));  % x marks end
-    collisions_index = find(collision_events(:, 1) == track_path(i));  % find the row index of collisions in one track from collision events
-    plot(collision_events(collisions_index, 5), collision_events(collisions_index, 6), append('>', color_pad(i)));
+%     collisions_index = find(collision_events(:, 1) == track_path(i));  % find the row index of collisions in one track from collision events
+%     plot(collision_events(collisions_index, 5), collision_events(collisions_index, 6), append('>', color_pad(i)));  % > for start collide
+%     plot(collision_events(collisions_index, 10), collision_events(collisions_index, 11), append('<', color_pad(i)));  % < for end collide
 end
 rectangle('Position', [0, 0, width * len_pixel, height * len_pixel]); 
 axis equal;  % use the same length for data unit
 title(['Path of tracks ', num2str(track_path), ', with color ', color_pad(1: length(track_path)) ]); xlabel('x (cm)'); ylabel('y (cm)'); hold off;
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitch_paths_2');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\stitched_paths');
 savefig(gcf, savename); 
 
 
-
-% Find the collision location and time, and save collision_events [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
-stitched_track_index = find([eset.expt.track.nt] ~= 1);  % track index in which collision happened, whose nt(number of tracks) ~= 1.
-collision_events = [];  % [track_ID, x(pixel), y(pixel), t(frame), x(cm), y(cm)] in units of pixels and frames
-for j = 1 : length(stitched_track_index)  % loop all stitched tracks
-    frames_collision = find(eset.expt.track(stitched_track_index(j)).iscollision);  % frames that collision is in progress
-    frame_collision_start = frames_collision([true, diff(frames_collision) ~= 1]);  % [collision 1 start frame, collision 2 start frame, ...]
-    frame_collision_end = frames_collision([diff(frames_collision) ~= 1, true]);  % this collision end frame will be off a lot
-    loc_collision_start_cm = [eset.expt.track(stitched_track_index(j)).pt(frame_collision_start).loc];  % [collision 1 start x, collision 2 start x, ... ; collision 1 start y, collision 2 start y, ...] in cm
-    loc_collision_start_pixel = camPtsFromRealPts(eset.expt.camcalinfo, loc_collision_start_cm);  % [x1, x2, ...; y1, y2, ...] in pixel
-    % collision event(s) for this single track, [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
-    collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(loc_collision_start_pixel), transpose(frame_collision_start), transpose(loc_collision_start_cm)];
-    collision_events = [collision_events; collision_event];  % combine collision events of different tracks together
 % Track info [track_ID, startFrame, startX(pixel), endY(pixel), endFrame,
 % endX(pixel), endY(pixel)]
 trackInfo = [];
@@ -727,11 +755,6 @@ for j = 1: length(t)
     endLoc = transpose(camPtsFromRealPts(eset.expt.camcalinfo, eset.expt.track(j).pt(end).loc));  % [x, y]
     trackInfo = [trackInfo; j, startFrame, startLoc, endFrame, endLoc];
 end
-% collision_events = fix(collision_events);  % change from double to integer
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
-save(savename, 'collision_events')  % run this at the first time to create new saving file
-save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
-% save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\trackInfo.csv');
 writematrix( trackInfo, savename)
 

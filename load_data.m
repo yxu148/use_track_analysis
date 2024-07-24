@@ -1,10 +1,12 @@
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3_5_6#T_Bl_Sq_2to7P_15_1_3_4_6';  % ---------------------------
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';  % ---------------------------
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 % reload experiment from mat files, called experiment set (eset), belong to @ExperimentSet object
 disp('Loading data...');
-x = [1];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
+x = [19];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
-pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
+
+
+pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 download = true;  % if true, plot and save basic figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 tperiod = 15;  % depend on the name of .mat file loaded, '_18_', or from the plot led2Val-Time-----------------
 % paramerters when generating BIN files of stimulation --------------------
@@ -42,30 +44,20 @@ field_name = {eset.expt.globalQuantity.fieldname};
 GQled1Val = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led1Val'}));
 GQled2Val = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led2Val'}));
 
-% figure; plot(GQled1Val.xData, GQled1Val.yData, 'r', GQled2Val.xData, GQled2Val.yData, 'b');
-
 % create a new globalquantity which is square wave across the whole experiment time
 xdata = GQled2Val.xData;  % xdata of all Global Quantity ledVals should be the same
 ydata = GQled1Val.yData + GQled2Val.yData;  % LED intensity in PWM
-index1 = find(GQled2Val.yData==15, 1, 'first'); % find the index of the first 15 element of led1Val
-temp_led1Val_yData = GQled1Val.yData(1:8e3);  % only select the first part so it's easier to pick index2
-index2 = find( temp_led1Val_yData==0, 1, 'last'); % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
-ydata(index1 : index2) = ydata(index1 : index2) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
-temp_led1Val_yData = GQled1Val.yData(8e3:end);  % only select the last part so it's easier to find index3
-index3 = find(temp_led1Val_yData == 0, 1, 'first') + 8e3 - 1;  % the begining of dark red
-index4 = find(temp_led1Val_yData == 0, 1, 'last') + 8e3 - 1;  % the end of dark red
-ydata(index3 : index4) = ydata(index3 : index4) + 60;
-
-
+index = find(GQled1Val.yData==0, 1, 'last');  % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
+ydata(1:index) = ydata(1:index) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
 eset.expt(1).addGlobalQuantity('eti', 'led12Val', xdata, ydata);  % create a man-made global field to add ton/toff
-% eset.expt(1).addTonToff('led12Val', 'square', 'asymmetryOK', true);  % create time on/off field based a global quantity fieldname 'led2Val'
-eset.expt(1).addTonToff('led12Val', 'square', 'period', tperiod);  % create time on/off field based a global quantity fieldname 'led2Val'
+eset.expt(1).addTonToff('led12Val', 'square');  % create time on/off field based a global quantity fieldname 'led2Val'
 GQton = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led12Val_ton'}));
 GQtoff = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led12Val_toff'}));
 
 % figure; plot(xdata, ydata);
+% figure; plot(GQled2Val.xData, GQled2Val.yData);
 % hold on;
-% plot(GQtoff.xData, GQtoff.yData + 60);
+% plot(GQtoff.xData, GQtoff.yData);
 % hold off;
 %% plot basic graphs
 if download
@@ -132,6 +124,6 @@ t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
 disp([num2str(length(t)), ' long tracks out of ', num2str(length(eset.expt(1).track)), ' tracks, from ', num2str(max(ntracks_frame)), ' moving maggots']);
 
 
-% copy this file to the results folder
+%% copy this file to the results folder
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)]);  % folder location to save file
 copyfile('load_data.m', savename)  % copy the file to the location

@@ -1,6 +1,6 @@
 % Location of the figures need to be changed
-results_dir = 'D:\Apps-SU\Matlab-Track-Analysis-SkanataLab\user specific\Yiming\marchmeeting2024';
-d = dir(fullfile(results_dir, '*hist_pturn_stim*.fig'));
+results_dir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3\results\results_fig';
+d = dir(fullfile(results_dir, '*hist_pturn_denoise_average*.fig'));
 
 mkdir(fullfile(results_dir, 'results_epsc'));
 

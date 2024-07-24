@@ -71,9 +71,10 @@ plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel
 
 % plot video, is running the function in @MaggotTrack
 % time in second, frameRate default to be 20 Hz,
-figure; eset.expt.track(7).playMovie('frameRate', 50, 'startTime', 1000, 'stopTime', 1300)
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 630 , 'stopTime', 750)
+figure; esets.eset1.expt(6).track(1).playMovie('frameRate', 50, 'startTime', 530 , 'stopTime', 580)
 % For now always indicate 'vidObj' to be able to view the video.
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track7');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_stitched_2');
 videoObject = VideoWriter(savename);
 open(videoObject);
 figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 600, 'stopTime', 650, 'vidObj', videoObject)
@@ -137,6 +138,7 @@ height = 2048;  % in pixel, in y-axis
 % scale info
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 % correspond track to larva in video
+j = 6;
 eset.expt.track(j).pt(1).loc  % location (cm) of the j-th track at the first frame, 2*1 coloumn vector
 % change the location in cm to location in pixels, so you can find it from MMF opened in ImageJ
 camPtsFromRealPts(eset.expt.camcalinfo, eset.expt.track(j).pt(1).loc)  
@@ -147,11 +149,11 @@ xlabel('x (cm)'); ylabel('y (cm)');
 
 
 % geometry of Region of Interest (ROI) read from Image Recorder front panel
-width = 1920;  % in pixel, in x-axis
-height = 1920;  % in pixel, in y-axis
+width = 1900;  % in pixel, in x-axis
+height = 1900;  % in pixel, in y-axis
 len_pixel = realUnitsPerPixel(eset.expt.camcalinfo);  % how many cm per pixel
 color_pad = ['r', 'g', 'b', 'y', 'k', 'c', 'm'];
-track_path = [3, 17, 18];  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
+track_path = [1];  % index of track to plot, could be [1], or [1, 3, 8]-----------------------------
 figure;
 for i = 1 : length(track_path)  %  The index of track to plotPath, should be shorter than color_pad
     eset.expt.track(track_path(i)).plotPath('sloc', color_pad(i));   hold on;  % 

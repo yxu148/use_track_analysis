@@ -1,11 +1,11 @@
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3_5_6#T_Bl_Sq_2to7P_15_1_3_4_6'
+   'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    2:4
+    1:21
     %[25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
-pause('on');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
+pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 
 %% load data, multiple eset, multiple expt, into esets
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -36,9 +36,9 @@ end
 
 %% Draw basic figures, like led1Val, track_length, turn_start_time, num_moving_maggots
 tperiod = 15;  % in seconds, period of stimulation time
-nperiods = 100;  % select tracks that have [nperiods, Nperiods] length
+nperiods = 79;  % select tracks that have [nperiods, Nperiods] length
 Nperiods = 121;
-download = true;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
+download = false;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     basedir = basedir_cell{folder_index};
@@ -56,29 +56,22 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         % create a new globalquantity which is square wave across the whole experiment time
         xdata = GQled2Val.xData;  % xdata of all Global Quantity ledVals should be the same
         ydata = GQled1Val.yData + GQled2Val.yData;  % LED intensity in PWM
-        index1 = find(GQled2Val.yData==15, 1, 'first'); % find the index of the first 15 element of led1Val
-        temp_led1Val_yData = GQled1Val.yData(1:8e3);  % only select the first part so it's easier to pick index2
-        index2 = find( temp_led1Val_yData==0, 1, 'last'); % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
-        ydata(index1 : index2) = ydata(index1 : index2) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
-        temp_led1Val_yData = GQled1Val.yData(8e3:end);  % only select the last part so it's easier to find index3
-        index3 = find(temp_led1Val_yData == 0, 1, 'first') + 8e3 - 1;  % the begining of dark red
-        index4 = find(temp_led1Val_yData == 0, 1, 'last') + 8e3 - 1;  % the end of dark red
-        ydata(index3 : index4) = ydata(index3 : index4) + 60;
+        index = find(GQled1Val.yData==0, 1, 'last');  % find the index of the last zero element of led1Val, this index may be different from the initial setting because of hardware noise
+        ydata(1:index) = ydata(1:index) + 60;  % this is to make the square wave fluctruate around a center quantity, use index to make the combined square wave cleaner
         esets.(eset_name).expt(k).addGlobalQuantity('eti', 'led12Val', xdata, ydata);  % create a man-made global field to add ton/toff
-        esets.(eset_name).expt(k).addTonToff('led12Val', 'square', 'period', tperiod);  % create time on/off field based a global quantity fieldname 'led2Val'
+        esets.(eset_name).expt(k).addTonToff('led12Val', 'square');  % create time on/off field based a global quantity fieldname 'led2Val'
         GQton = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_ton'}));
         GQtoff = esets.(eset_name).expt(k).globalQuantity(strcmp({esets.(eset_name).expt(k).globalQuantity.fieldname}, {'led12Val_toff'}));
+
 
         % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
         mkdir(fullfile(basedir, ['results', d(x(k)).name(end-16:end-4)]));
         if download
             % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
             figure;
-            plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
-            plot(GQled2Val.xData/60, GQled2Val.yData, 'b');
-            plot(GQled2Val.xData/60, GQtoff.yData, 'k');
-            plot(GQled2Val.xData/60, GQtoff.yData+60, 'k'); hold off;
-            xlabel('Time (min)'); legend('led1Val','led2Val', 'toff');
+            plot(GQled2Val.xData/60, GQled2Val.yData, 'b'); hold on;
+            plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold off;
+            xlabel('Time (min)'); legend('led2Val', 'toff');
             pause;
             savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\led12Val_toff');
             savefig(gcf,savename);
@@ -140,18 +133,20 @@ end
 
 
 %% Plot behavior info for each experiment
-download = true;  % if download true, save figures; if false, don't save.
-save_data = true;
-t_stim_start = [0, 300, 600, 900, 1200, 1500];  % start time (s) of each intensity of stimulation
-t_stim_end = [300, 600, 900, 1200, 1500, 1800];
-stim_color = {'blue1', 'red1', 'bluered1', 'blue2', 'red2', 'bluered2'};  % descripiton of the t_stim_start
+download = false;  % if download true, save figures; if false, don't save.
+save_data = false;
+t_stim_start = [0, 900, 1800];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 1200, 1800];
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 frame_rate = 20;  % number of frames per second
-plot_pturn = true;  
+plot_pturn = false;  
 tbin = 3;  edges = 0:tbin: tperiod;
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-plot_turnrate = true;
-plot_turnrate_individual = true;
-plot_speed_individual = true;
+plot_turnrate = false;
+plot_turnrate_individual = false;
+plot_speed_individual = false;
+plot_speed_run_individual = false;
+track_info = true;
 stepsize = 0.1; binsize = 0.5;  % seconds
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     
@@ -177,7 +172,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             turnStart_std = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
             for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
                 for j = 1 : length(t)
-                    % 'led2Val_ton' fails some time if stimulation isn't strict square wave
+                    % 'led12Val_ton' fails some time if stimulation isn't strict square wave
                     turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
                     turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
                     turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
@@ -202,27 +197,25 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     xticks(edges);    ylim([0, 1]);  % comment ylim first, change to ymax at the second run ----------------
 
                     larva_index = ['larva', num2str(j)];
-                    if save_data
-                        % save info into a new structure larvae
-                        larvae.(larva_index).trackNum = t(j).trackNum;  % integer
-                        larvae.(larva_index).expt_info = d(x(k)).name(1:end-4);  % string
-                        larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
-                        larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
-                        larvae.(larva_index).pturn_error.(stim_color{i}) = sqrt(N)/nperiod;
-                        larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
-                        larvae.(larva_index).turnStartTime = turnStartTime;
-                        larvae.(larva_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
-                        larvae.(larva_index).turnStart_std.(stim_color{i}) = turnStart_std;
-                        if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
-                            larvae.(larva_index).response.(stim_color{i}) = '1';
-                        elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
-                            larvae.(larva_index).response.(stim_color{i}) = '1';
-                        else
-                            larvae.(larva_index).response.(stim_color{i}) = '0';
-                        end
+                    % create a new structure larvae
+                    larvae.(larva_index).trackNum = t(j).trackNum;  % integer
+                    larvae.(larva_index).expt_info = d(x(k)).name(1:end-4);  % string
+                    larvae.(larva_index).nperiod.(stim_color{i}) = nperiod;
+                    larvae.(larva_index).pturn.(stim_color{i}) = N/nperiod;
+                    larvae.(larva_index).pturn_error.(stim_color{i}) = sqrt(N)/nperiod;
+                    larvae.(larva_index).turnStart.(stim_color{i}) = turnStart;
+                    larvae.(larva_index).turnStartTime = turnStartTime;
+                    larvae.(larva_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
+                    larvae.(larva_index).turnStart_std.(stim_color{i}) = turnStart_std;
+                    if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
+                        larvae.(larva_index).response.(stim_color{i}) = '1';
+                    elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
+                        larvae.(larva_index).response.(stim_color{i}) = '1';
+                    else
+                        larvae.(larva_index).response.(stim_color{i}) = '0';
                     end
 
-                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
+                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(sum(N)), ', ', larvae.(larva_index).response.(stim_color{i}), ')']);
 
                 end
             end
@@ -261,7 +254,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                 plot(time_timestep, turnrate);
                 xline(9, 'k--');  % stimulus change time at -------------
                 xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
-                title([stim_color{i}, ', ', num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods, ', num2str(i), '-th intensity of stimulation']);
+                title([stim_color{i}, ', ', num2str(length(turnStart_total)), ' turns, in ', num2str(nperiod), ' periods']);
             end
             sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
             pause;
@@ -300,7 +293,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     turnrate = rate_from_time(turnStart, tperiod, stepsize, binsize) ./ double(nperiod) * 60;
                     time_timestep = (0 : fix(tperiod/stepsize)) * stepsize;
                     plot(time_timestep, turnrate); xline(6, 'k--');
-                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}),  ')']);
+                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}),  ')']);
                     
                     larva_index = ['larva', num2str(j)];
                     if save_data
@@ -321,7 +314,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         
         if plot_speed_individual
             % Variability, each track in each column, each stimulation period in each row
-            % save info into a existing structure larvae
+            % save speed into a existing structure larvae
             t = esets.(eset_name).expt(k).track;
             minNpoints = nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
             maxNpoints = Nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
@@ -355,16 +348,17 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); xline(6, '--'); hold off;
                     xlabel('ton (s)'); ylabel('Speed (cm/min)');
 
-                    larva_index = ['larva', num2str(j)];  
+                    larva_index = ['larva', num2str(j)];
+                    turnStart = larvae.(larva_index).turnStart.(stim_color{i});
                     if save_data  % add new contents to the structure larvae
                         larvae.(larva_index).speed.(stim_color{i}) = y_v;
                         larvae.(larva_index).speed_std.(stim_color{i}) = stdev;
                     end
             
-                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(nperiod), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
                 end
             end
-            sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, nperiod, response)']);  linkaxes(ax, 'y');  % align subplots with y axis
+            sgtitle(['Step size = ', num2str(stepsize), ' s, (Track number, Number of Stimulation, Number of Turn, Response)']);  linkaxes(ax, 'y');  % align subplots with y axis
             pause;
             if download
                 savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\v_ton_stim_individual');
