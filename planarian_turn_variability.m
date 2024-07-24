@@ -41,3 +41,10 @@ savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\vsingle_t_tr
 savefig(gcf,savename);
 
 
+% relative loction of one track verses time
+j = 1;
+t_single = eset.expt.track(j).dq.eti;
+loc_single = eset.expt.track(j).dq.iloc;  % interpolated location, [x1, x2, ...; y1, y2, ...] in cm, use linear interp function to insert missing points.
+figure;
+plot(t_single, loc_single(1, :));
+xlabel('Time (s)');
