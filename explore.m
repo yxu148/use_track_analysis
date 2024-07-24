@@ -179,14 +179,23 @@ disp(['navigational index along x is ', num2str(ni_x), ', NI along y is ', num2s
 
 
 % move all mmfs to certain loaction
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
-destidir = 'G:\AS-Filer\PHY\mmihovil\Shared\MMF';
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
+destidir = '\\10.1.115.225\Mirna Lab\videos\MMF files\track_info';
 d = dir(fullfile(basedir, '2*', '*.mmf'));
 for i = 1: 18
     savename = strcat(d(i).folder, '\', d(i).name);
     copyfile(savename, destidir)  % copy the file to the location
 end
 
+
+% move all CSVs from results folder to certain loaction
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
+destidir = 'D:\track_info';
+d = dir(fullfile(basedir, 'results_20*', 'trackInfo_202*.csv'));
+for i = 1: 21
+    savename = strcat(d(i).folder, '\', d(i).name);
+    copyfile(savename, destidir)  % copy the file to the location
+end
 
 
 
