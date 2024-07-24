@@ -7,6 +7,16 @@ eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  
 pause('off');  % 'on'---ask the user to press any key to save the figure, and continue; 'off'--directly save without asking
 download = true;  % if true, plot and save basic figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 tperiod = 15;  % depend on the name of .mat file loaded, '_18_', or from the plot led2Val-Time-----------------
+% paramerters when generating BIN files of stimulation --------------------
+t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 1200, 1800];
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+frame_rate = 20;  % number of frames per second
+% To save longer tracks in t
+nperiods = 79;  % select tracks that have [nperiods, Nperiods] length, minimum 23 min
+Nperiods = 121;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
+
+
 
 % load .mat files containing track information into eset
 disp('Loading tracks ...');
@@ -75,16 +85,6 @@ end
 
 disp(['Time for one frame is ', num2str(eset.expt.elapsedTime(2)), ' s']);
 Ntracks = size(eset.expt(1).track);  % 1-by-Number_of_Tracks ( number of maggots)
-% To save longer tracks in t
-nperiods = 100;  % select tracks that have [nperiods, Np eriods] length
-Nperiods = 121;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
-disp(['After filtering out tracks within [', num2str(nperiods), ', ', num2str(Nperiods), '] periods']);
-t = eset.expt.track;
-minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
-maxNpoints = Nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
-disp(['There are still ', num2str(nnz((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints))), ' tracks left']);  % nnz (number of nonzero elements)
-t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
-disp('The filtered tracks are stored in t');
 if download
     figure;
     histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), 0:10:(Nperiods+1));  % round 60.001 to 60
