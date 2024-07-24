@@ -475,57 +475,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
 end  % end base folder loop
 
 
-% %% plot averge behavior across different experiments
-% download = false;  % if download true, save figures; if false, don't save.
-% save_data = true;
-% t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
-% t_stim_end = [600, 1200, 1800];
-% stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-% frame_rate = 20;  % number of frames per second
-% tbin = 3;  edges = 0:tbin: tperiod;
-% xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-% stepsize = 0.1; binsize = 0.5;  % seconds
-% for folder_index = 1 : length(x_cell)  % loop for each basedir folder
-%     
-%     basedir = basedir_cell{folder_index};
-%     eset_name = ['eset', num2str(folder_index)];
-%     x = x_cell{folder_index};
-%     
-%     mkdir(fullfile(basedir, 'results'));
-% 
-%     turnStart_allexpts_alltracks = esets.(eset_name).gatherFromSubField('reorientation', 'led12Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
-%     turnStartTime_allexpts_alltracks = esets.(eset_name).gatherFromSubField('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
-%     figure;  % one folder, one plot
-%     for i = 1: length(t_stim_start)
-%         nperiod_all = 0;
-%         turnStart_all = turnStart_allexpts_alltracks((turnStartTime_allexpts_alltracks >= t_stim_start(i)) & (turnStartTime_allexpts_alltracks < t_stim_end(i)));
-%         if i == length(t_stim_start)  % for the last stimulation period, including edges
-%             turnStart_all = turnStart_allexpts_alltracks((turnStartTime_allexpts_alltracks >= t_stim_start(i)) & (turnStartTime_allexpts_alltracks <= t_stim_end(i)));
-%         end
-%         for k = 1 : length(x)  % loop for each expt in the eset
-%             t = esets.(eset_name).expt(k).track;
-%             for j = 1 : length(t)
-%                 if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
-%                     t_start = max([t_stim_start(i), esets.(eset_name).expt(k).elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
-%                     t_end = min([t_stim_end(i), esets.(eset_name).expt(k).elapsedTime(t(j).endFrame-2)]);  % temporal - 2
-%                     nperiod = (t_end - t_start) / tperiod;
-%                     nperiod_all = nperiod_all + nperiod;
-%                 end
-%             end  % end looping each track
-%         end  % end looping each expt in the eset
-%         turnrate_all = rate_from_time(turnStart_all, tperiod, stepsize, binsize) ./ double(nperiod_all) * 60;
-%         time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
-%         ax(i) = subplot(length(t_stim_start),1,i);
-%         plot(time_timestep, turnrate_all); xline(9, 'k--');
-%         xlabel('Reorientation Start Time in Period (s)'); ylabel('Reorientation Rate (per min)'); 
-%         title([num2str(length(turnStart_all)), ' turns, in ', num2str(nperiod_all), ' periods, ', num2str(i), '-th intensity of stimulation']);
-%     end  % end looping t_stim_start
-%     sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]);
-%     savename = strcat(basedir, '\results', '\turnrate_all');
-%     savefig(gcf, savename); 
-% end  % end looping folder_index
-% 
-% sum(esets.eset1.expt(2).gatherField('npts'))/frame_rate/tperiod;  % roughly total number of nperiod
+
 
 %% copy this file to all results folders that used it
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
