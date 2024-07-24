@@ -374,6 +374,76 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
         end  % end plot_speed_individual
 
 
+        if plot_speed_run_individual
+            % Variability, each track in each column, each stimulation period in each row
+            % save speed of each long track at a certain period of time of stimulation into a existing structure larvae
+            t = esets.(eset_name).expt(k).track;
+            minNpoints = nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
+            maxNpoints = Nperiods * tperiod / (esets.(eset_name).expt(k).elapsedTime(end)/length(esets.(eset_name).expt(k).elapsedTime));
+            t = t((maxNpoints >= [t.npts]) & ([t.npts] >= minNpoints));  % select tracks longer than requirement
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                load(savename, 'larvae');
+            end
+            figure; stepsize = 0.1;  % to get one average speed of run for stepsize seconds
+            % only keep the speed whose start time falls into the i-th intensity of stimulation
+            for i = 1: length(t_stim_start)
+                for j = 1: length(t)
+                    v_frame = t(j).getSubFieldDQ('run', 'speed') * 60 ;  % cm/min, speed of every frame when larva is running
+                    ton_frame = t(j).getSubFieldDQ('run', 'led12Val_ton');  % second
+                    t_frame = t(j).getSubFieldDQ('run', 'eti');
+                    
+                    % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
+                    if i < length(t_stim_start)
+                        v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+                        ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame < t_stim_end(i)));
+                    else
+                        v_frame = v_frame((t_stim_start(i) <= t_frame) & (t_frame <= t_stim_end(i)));
+                        ton_frame = ton_frame((t_stim_start(i) <= t_frame) & (t_frame <= t_stim_end(i)));
+                    end
+            
+                    %number of period of stimulation that falls into certain intensity
+                    if (t(j).startFrame < t_stim_end(i)*frame_rate) && (t(j).endFrame > t_stim_start(i)*frame_rate)
+                        t_start = max([t_stim_start(i), esets.(eset_name).expt(k).elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+                        t_end = min([t_stim_end(i), esets.(eset_name).expt(k).elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+                        nperiod = (t_end - t_start) / tperiod;
+                    else 
+                        nperiod = 0;
+                    end
+                    index_subplot = j + (i-1)*length(t);
+                    ax(index_subplot) = subplot(length(t_stim_start), length(t), index_subplot);
+                    [x_ton,y_v, ~, stdev] = meanyvsx(ton_frame, v_frame, 0:stepsize:tperiod);  % std
+                    uppercurve = y_v + 0.5*stdev;
+                    lowercurve = y_v - 0.5*stdev;
+                    x_tofill = [x_ton, fliplr(x_ton)];  % the x axis of the ploygon to fill
+                    y_tofill = [lowercurve, fliplr(uppercurve)];
+                    pathObj = fill(x_tofill, y_tofill, 0.8*[1 1 1], 'LineStyle', 'none'); hold on;  % no edges for the patch
+                    plot(x_ton, y_v, 'Color', 0.2*[1 1 1]); xline(6, '--'); hold off;
+                    xlabel('ton (s)'); ylabel('Run speed (cm/min)');
+            
+                    % add new contents to the structure larvae, or read info from
+                    % larvae
+                    larva_index = ['larva', num2str(j)];
+                    turnStart = larvae.(larva_index).turnStart.(stim_color{i});
+                    if save_data  % add new contents to the structure larvae
+                        larvae.(larva_index).speed_run.(stim_color{i}) = y_v;
+                        larvae.(larva_index).speed_run_std.(stim_color{i}) = stdev;
+                    end
+            
+                    title([stim_color{i}, ' (', num2str(t(j).trackNum), ', ', num2str(round(nperiod,1)), ', ', num2str(length(turnStart)), ', ', larvae.(larva_index).response.(stim_color{i}) ')']);
+            
+                end
+            end
+            sgtitle(['Step size = ', num2str(stepsize), ' s, (track index, Nperiod, Nturn, response)']);  linkaxes(ax, 'y');  % align subplots with y axis
+            pause;
+            if download
+                savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\vRun_ton_stim_individual');
+                savefig(gcf, savename); 
+            end
+            close;
+        end  % end plotting speed_run_individual
+
+
 
 
         if save_data
