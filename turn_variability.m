@@ -716,12 +716,26 @@ for j = 1 : length(stitched_track_index)  % loop all stitched tracks
     % collision event(s) for this single track, [track_1, x1(pixel), y1(pixel), t1(frame), x1(cm), y1(cm); track_1, x2(pixel), y2(pixel), t1(frame), x2(cm), y2(cm); ...]
     collision_event = [repmat(stitched_track_index(j), length(frame_collision_start), 1), transpose(loc_collision_start_pixel), transpose(frame_collision_start), transpose(loc_collision_start_cm)];
     collision_events = [collision_events; collision_event];  % combine collision events of different tracks together
+% Track info [track_ID, startFrame, startX(pixel), endY(pixel), endFrame,
+% endX(pixel), endY(pixel)]
+trackInfo = [];
+t = eset.expt.track;
+for j = 1: length(t)
+    startFrame = eset.expt.track(j).startFrame;
+    startLoc = transpose(camPtsFromRealPts(eset.expt.camcalinfo, eset.expt.track(j).pt(1).loc));  % [x, y]
+    endFrame = eset.expt.track(j).endFrame;
+    endLoc = transpose(camPtsFromRealPts(eset.expt.camcalinfo, eset.expt.track(j).pt(end).loc));  % [x, y]
+    trackInfo = [trackInfo; j, startFrame, startLoc, endFrame, endLoc];
 end
 % collision_events = fix(collision_events);  % change from double to integer
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 save(savename, 'collision_events')  % run this at the first time to create new saving file
 save(savename, 'collision_events', '-append')  % run this at the first time to create new saving file
 % save(savename, 'turnrate_array', 'nperiod_array', '-append')  % run this next time to add new data to the same file
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\trackInfo.csv');
+writematrix( trackInfo, savename)
+
+
 
 
 
