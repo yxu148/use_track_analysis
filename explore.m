@@ -162,6 +162,14 @@ figure;
 eset.expt.track(2).plotPath('sloc', 'highlightinds', 'iscollision')
 
 
+% navigational index NI = mean(Vx) / mean(V);
+v_mean = mean(eset.gatherField('speed')) * 60;  % cm/min
+vxy_mean = mean(eset.gatherField('vel'), 2) * 60;  % [vx_mean; vy_mean]
+ni_x = vxy_mean(1) / v_mean;
+ni_y = vxy_mean(2) / v_mean;
+disp(['navigational index along x is ', num2str(ni_x), ', NI along y is ', num2str(ni_y)]);
+
+
 
 
 
