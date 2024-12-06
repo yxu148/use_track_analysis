@@ -183,24 +183,15 @@ end
 name_type_cell(nlarva_type<5) = {'\_'};
 
 % plot the matrix pturn_all
+figure;
 imagesc(pturn_all, [0, 1]); 
-xlabel('3-second bins'); ylabel('Index of larva');
-% number of larva for each type, in order of 000, 001, 010, 011, 100, 101, 110, 111
-nlarva_type = [size(pturn_000, 1), size(pturn_001, 1), size(pturn_010, 1), size(pturn_011, 1),size(pturn_100, 1), size(pturn_101, 1), size(pturn_110, 1), size(pturn_111, 1)];
-yline([nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), ...
-    sum(nlarva_type(1:7))] + 0.5, 'w-');  % draw white line to seperate different response type
-title(['1-', num2str(nlarva_type(1)), ' larva-000, ', ...
-    num2str(nlarva_type(1) + 1), '-', num2str(sum(nlarva_type(1:2))), ' larva-001, ', ...,
-    num2str(sum(nlarva_type(1:2)) + 1), '-', num2str(sum(nlarva_type(1:3))), ' larva-010, ', ...,
-    num2str(sum(nlarva_type(1:3)) + 1), '-', num2str(sum(nlarva_type(1:4))), ' larva-011, ', ...,
-    num2str(sum(nlarva_type(1:4)) + 1), '-', num2str(sum(nlarva_type(1:5))), ' larva-100, ', ...,
-    num2str(sum(nlarva_type(1:5)) + 1), '-', num2str(sum(nlarva_type(1:6))), ' larva-101, ', ...,
-    num2str(sum(nlarva_type(1:6)) + 1), '-', num2str(sum(nlarva_type(1:7))), ' larva-110, ', ...,
-    num2str(sum(nlarva_type(1:7)) + 1), '-', num2str(sum(nlarva_type(1:8))), ' larva-111, '
-    ])
-cbar = colorbar; cbar.Label.String = 'Turn possibility with the 3-s bin';
-mkdir(fullfile(basedir, 'results_clean', 'results_fig'));
-savename = strcat(basedir, '\results_clean', '\results_fig', '\pturn_all');
+xline([0.5, 5.5, 10.5], 'w', stim_color); yline(boundary_type + 0.5, 'w', name_type_cell);
+ylabel('Index of larva'); set(gca,'XTick',[])
+colormap(parula(4));  % get the downsampled version of parula colormap that has 4 colors
+cbar = colorbar; cbar.Label.String = 'Turn possibility within 3-s bins';
+cbar.Ticks = 0:0.25:1;
+mkdir(fullfile(basedir, '\results_new', 'results_fig'));
+savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_discrete');
 savefig(gcf, savename);
 
 
