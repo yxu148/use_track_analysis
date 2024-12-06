@@ -6,10 +6,10 @@ led2Val_high = eset.gatherField('led2Val_high');  % 1 for high, 0 for low of Blu
 led2Val_ton = eset.gatherField('led2Val_ton');  % 1 for high, 0 for low of Blue Light intensity (PWM) of LED at each frame
 
 % To read BIN file:
-fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3__202404031222 sup data dir\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3__202404031222 led1 values.bin');
+fileID = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to872P_15_436_654P_10minRest\Gr21a@Chrimson(3)_T_Re_Sq_219to872P_15_436_654P_10minRest_202409131347 sup data dir\Gr21a@Chrimson(3)_T_Re_Sq_219to872P_15_436_654P_10minRest_202409131347 led1 log values.bin');
 A = fread(fileID);
 fclose(fileID);
-fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\stimulus control\bin files\variability\6s_on_9s_off\no rest\100    0  100    0_50   0  50   0\variable_total2400s_high6s_low9s_intensity100    0  100    0_50   0  50   0.bin');
+fileID2 = fopen('G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to872P_15_436_654P_10minRest\Gr21a@Chrimson(3)_T_Re_Sq_219to872P_15_436_654P_10minRest_202409131347 sup data dir\Gr21a@Chrimson(3)_T_Re_Sq_219to872P_15_436_654P_10minRest_202409131347 led2 values.bin');
 B = fread(fileID2);
 fclose(fileID2);
 figure; plot(A, 'r'); hold on; plot(B, 'b'); hold off;
@@ -71,13 +71,13 @@ plot (xx, [rbefore;rafter], 'bo-'); xlim([-3 3]); ylabel('Rate of Turn'); xlabel
 
 % plot video, is running the function in @MaggotTrack
 % time in second, frameRate default to be 20 Hz,
-figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 630 , 'stopTime', 750)
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 200 , 'stopTime', 300)
 figure; esets.eset1.expt(6).track(1).playMovie('frameRate', 50, 'startTime', 530 , 'stopTime', 580)
 % For now always indicate 'vidObj' to be able to view the video.
-savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_stitched_2');
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track1_2');
 videoObject = VideoWriter(savename);
 open(videoObject);
-figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 600, 'stopTime', 650, 'vidObj', videoObject)
+figure; eset.expt.track(1).playMovie('frameRate', 50, 'startTime', 200, 'stopTime', 300, 'vidObj', videoObject)
 close(videoObject);
 % with esets
 savename = strcat(basedir,['\results', d(x(6)).name(end-16:end-4)], '\track1_2');
@@ -179,23 +179,35 @@ disp(['navigational index along x is ', num2str(ni_x), ', NI along y is ', num2s
 
 
 % move all mmfs to certain loaction
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
-destidir = '\\10.1.115.225\Mirna Lab\videos\MMF files\track_info';
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_';
+destidir = 'D:\ToGil\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_';
 d = dir(fullfile(basedir, '2*', '*.mmf'));
-for i = 1: 18
+for i = 1: 19
     savename = strcat(d(i).folder, '\', d(i).name);
     copyfile(savename, destidir)  % copy the file to the location
 end
 
 
 % move all CSVs from results folder to certain loaction
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
-destidir = 'D:\track_info';
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_';
+destidir = 'D:\ToGil\Gr21a@Chrimson(3)_T_Re_Sq_219to436P_15_1_3_#T_Bl_Sq_2to7P_15_2_3_';
 d = dir(fullfile(basedir, 'results_20*', 'trackInfo_202*.csv'));
-for i = 1: 21
+for i = 1: 18
     savename = strcat(d(i).folder, '\', d(i).name);
     copyfile(savename, destidir)  % copy the file to the location
 end
 
 
-
+% move certain figures from results folder to certain loaction, and rename
+% by adding expt time to the end of the name
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3';
+destidir = 'C:\Users\yxu148\OneDrive - Syracuse University\General\Yiming\plots for Mirna\tracks_start_end_time';
+d = dir(fullfile(basedir, 'results_20*', 'track_start_end.fig'));
+for i = 1: 21
+    savename = strcat(d(i).folder, '\', d(i).name);
+    copyfile(savename, destidir)  % copy the file to the location
+    % rename the file by inserting the data&time of expt
+    copiedname = strcat(destidir, '\', d(i).name);  % the full name of copied file in destination location
+    rename = strcat(destidir, '\', d(i).name(1:end-4), d(i).folder(end-12:end), d(i).name(end-3:end));  % rename by inserting data&time before the suffix
+    movefile(copiedname, rename)
+end
