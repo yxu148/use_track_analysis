@@ -319,7 +319,7 @@ for denoise = [true]  % [true, false] for both plots
                 fred = fit(centers_red(nred~=0).', nred(nred~=0).', 'gauss1');
                 fbluered = fit(centers_bluered(nbluered~=0).', nbluered(nbluered~=0).', 'gauss1');
                 % to plot with Gaussian fit
-                figure; hold on;
+                subplot(5, 1, i); hold on;
                 lblue = plot(fblue, centers_blue(nblue~=0), nblue(nblue~=0), 'o');  % return the line objects, raw data and fitted line
                 bblue = bar(centers_blue(nblue~=0), nblue(nblue~=0), 1, 'FaceColor', [0, 0, 1]);
                 lblue(1).Color = [0, 0, 1]; lblue(1).MarkerFaceColor = [0, 0, 1]; lblue(1).DisplayName = ['Blue, mean ', num2str(mean(Pblue)), ', std ', num2str(std(Pblue))]; % properties of dot data
@@ -337,7 +337,7 @@ for denoise = [true]  % [true, false] for both plots
                 lbluered(1).Color = [0, 0, 0]; lbluered(1).MarkerFaceColor = [0, 0, 0]; lbluered(1).DisplayName = ['Blue and red, mean ', num2str(mean(Pbluered)), ', std ', num2str(std(Pbluered))]; % properties of dot data
                 lbluered(2).Color = [0, 0, 0]; lbluered(2).DisplayName = ['\mu = ', num2str(fbluered.b1), ', \sigma = ', num2str(fbluered.c1/sqrt(2))];  % properties of fit line
                 bbluered.FaceAlpha = 0.5;  bbluered.DisplayName = 'Blue and red'; bbluered.BarWidth = 0.6;
-                hold off; xticks(edges); 
+                hold off; xticks(edges); xlim([0, 1]);
                 legend('Location', 'eastoutside');
                 xlabel('Pturn during the first 3 s of stimulation high'); ylabel('Proportion of maggots');
             case 'Poisson'
