@@ -415,6 +415,14 @@ unlabeled_time = (t(j).npts - length(t_running) - length(t_turning)) / frame_rat
 
 %% Speed
 
+% mean speed of each run verses time in experiment of single larvae
+j = 6;  % track number
+% t = eset.expt.track;
+t = esets.eset1.track;
+v_run_mean = t(j).getSubFieldDQ('run', 'speed', 'position', 'mean') * 60 ;  % cm/min, mean speed of each run
+t_run_mean = t(j).getSubFieldDQ('run', 'eti', 'position', 'mean');  % second, median/mean time of each run
+figure; plot(t_run_mean, v_run_mean);
+
 % speed of run verses time in experiment of single larvae
 j = 1;  % track number
 t = eset.expt.track;
