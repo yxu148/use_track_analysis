@@ -2,7 +2,7 @@ basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extrac
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 % reload experiment from mat files, called experiment set (eset), belong to @ExperimentSet object
 disp('Loading data...');
-x = [19];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
+x = [1];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
 
 
@@ -54,20 +54,20 @@ eset.expt(1).addTonToff('led12Val', 'square');  % create time on/off field based
 GQton = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led12Val_ton'}));
 GQtoff = eset.expt.globalQuantity(strcmp({eset.expt.globalQuantity.fieldname}, {'led12Val_toff'}));
 
-% figure; plot(xdata, ydata);
-% figure; plot(GQled2Val.xData, GQled2Val.yData);
-% hold on;
-% plot(GQtoff.xData, GQtoff.yData);
+% figure; plot(xdata, ydata); hold on;
+figure; plot(GQled2Val.xData, GQled2Val.yData, 'b'); hold on;
+plot(GQled1Val.xData, GQled1Val.yData, 'r'); hold off;
+% plot(GQtoff.xData, GQtoff.yData + 70);
 % hold off;
 %% plot basic graphs
 if download
     % correspond frame number to time, seems like the stimulation happens at 10 s of the 20 s period
     figure;
-%     plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
+    plot(GQled2Val.xData/60, GQled1Val.yData, 'r'); hold on;
     plot(GQled2Val.xData/60, GQled2Val.yData, 'b'); hold on;
-    plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold off;
-%     plot(GQled2Val.xData/60, GQtoff.yData + 60, 'k'); hold off;
-    xlabel('Time (min)'); legend('led2Val', 'toff');
+%     plot(GQled2Val.xData/60, GQtoff.yData, 'k'); hold off;
+    plot(GQled2Val.xData/60, GQtoff.yData + 70, 'k'); hold off;
+    xlabel('Time (min)'); legend('led1Val', 'led2Val', 'toff');
     pause;
     savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\led12Val_toff');
     savefig(gcf,savename);

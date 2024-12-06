@@ -64,7 +64,7 @@ figure;
 tbin = 3;  edges = [0:tbin: tperiod];
 %edges = [0,4,7,10,13,16,20];
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
-for j = 1 : length(t)
+for j = 1 :  length(t)
     turnStart =  t(j).getSubFieldDQ('reorientation', 'led1Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, toff means period starts with light off
     %number of cycle for all points in the track, start with light on
     t_start = eset.expt.elapsedTime(t(j).startFrame + 1);  % time (s) of start for track j under i-th  intensity of stimulation 
@@ -117,9 +117,8 @@ savefig(gcf, savename);
 
 % Probability of start to turn in one period for each track
 % Variability, each track in each column, each period in each row
-t = eset.expt.track;
-minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
-t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
+t = eset.expt.track;  % select tracks that start earlier than latest_start(s) and end later than earliest_end (s)
+t = t(([t.startFrame] <= latest_start * frame_rate) & ([t.endFrame] >= earliest_end * frame_rate));
 figure;
 tbin = 3;  edges = 0:tbin: tperiod;
 %edges = [0,4,7,10,13,16,20];
@@ -133,9 +132,9 @@ else
     clear larvae;
 end
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
-    for j = 1 : length(t)
+    for j = 1 : 2 % length(t)
         % 'led2Val_ton' fails some time if stimulation isn't strict square wave
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
         %number of period of stimulation that falls into certain intensity
@@ -285,7 +284,7 @@ for i = 1: length(t_stim_start)
         % turn start time (second) of track j, excluding pause
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
         % turn start time in period (second) of track j, excluding pause, start from intensity low. 
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_toff', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');
         % select the start time in period of turns that happen between t_stim_start(i) and t_stim_start(i)
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i)));
         turnStart_total = [turnStart_total turnStart];  % to contain more turnStart after each loop of j
@@ -365,15 +364,14 @@ savefig(gcf, savename);
 % Variability, each track in each column, each stimulation period in each row
 % save info into a existing structure larvae
 t = eset.expt.track;
-minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
-t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
+t = t(([t.startFrame] <= latest_start * frame_rate) & ([t.endFrame] >= earliest_end * frame_rate));
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\data.mat');
 load(savename, 'larvae');
 figure;
 stepsize = 0.1; binsize = 0.5;
 for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
     for j = 1 : length(t)  % j-th track
-        turnStart =  t(j).getSubFieldDQ('reorientation', 'led2Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+        turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
         turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
         turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
         %number of period of stimulation that falls into certain intensity
@@ -424,14 +422,17 @@ t_run_mean = t(j).getSubFieldDQ('run', 'eti', 'position', 'mean');  % second, me
 figure; plot(t_run_mean, v_run_mean);
 
 % speed of run verses time in experiment of single larvae
-j = 1;  % track number
-t = eset.expt.track;
-stepsize = 0.1;  % second
+j = 6;  % track number
+% t = eset.expt.track;
+t = esets.eset1.expt(2).track;
 v_run = t(j).getSubFieldDQ('run', 'speed') * 60 ;  % cm/min, speed of every frame when larva is running
 t_run = t(j).getSubFieldDQ('run', 'eti');  % second
-figure; plot(t_run, v_run);
+turnStartTime =  eset.expt.track(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+figure; plot(t_run, v_run); hold on;
+plot(turnStartTime, 0.3, 'ok'); hold off; 
 xlabel('Time (s)'); ylabel('Run Speed (cm/min)'); title(['Track ', num2str(j)])
-
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\vRun_t_track', num2str(j)]);
+savefig(gcf, savename); 
 
 % speed of run verses time in period of single larva
 j = 1;  % track number
@@ -452,7 +453,7 @@ xlabel('Time in period (s)'); ylabel('Speed of run (cm/min)'); title(['Stepsize 
 
 
 % speed of single larvae verses experimental time
-j = 1;  % track number
+j = 8;  % track number
 v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
 t_frame = eset.expt.track(j).dq.eti;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
 turnStartTime =  eset.expt.track(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period

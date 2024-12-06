@@ -4,14 +4,15 @@
 
 %% Get cell figlocation_list
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Bl_Sq_2to67P_15_7_22P_5minRest'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    1:9
+%     [6, 8, 6, 4]
 %     [1, 6, 7, 10]
-%     [25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
+    1:21
     };
-larvaNum = {[1], [7], [2], [24]};  % larva index in each expt, could be [1 2 4]
+% larvaNum = {[1], [7], [2], [24]};  % larva index in each expt, could be [1 2 4]
+larvaNum = {[5], [2], [7], [4]};  % larva index in each expt, could be [1 2 4]
 pause('on');
 
 
@@ -30,13 +31,13 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
 end
 
 %% plot info of individual larva to one graph
-download = false;
+download = true;
 plot_pturn = true;
-plot_speed_individual = false;
+plot_speed_individual = true;
 plot_turnStart = false;
 plot_turnStart_turnOrder = false;
 plot_turnStartTime_turnOrder = false;
-plot_cdf_individual =false;
+plot_cdf_individual =true;
 tbin = 3;  
 tperiod = 15;
 stepsize = 0.1;
@@ -78,12 +79,14 @@ for j = 1 : length(figlocation_list)
                 pos = get(gca, 'Position');
                 pos(3) = pos(4) * 1.5;  % width = height * 1.5
                 set(gca, 'Position', pos)
-                title([num2str(length(turnStart_temp)), ' turns in ', num2str(nperiod_temp), ' periods'])
+                % title([num2str(length(turnStart_temp)), ' turns in ', num2str(nperiod_temp), ' periods'])
+                ax(k).FontSize = 16;
+                % xlabel('ton (s)', 'FontSize', 18); ylabel('Turn probability', 'FontSize', 18);
             end
             sgtitle(response);
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'pturn_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
-                savefig(gcf, savename);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'pturn_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savefig(gcf, savename); close;
             end  % end download
         end  % end plot_pturn
 
@@ -106,11 +109,11 @@ for j = 1 : length(figlocation_list)
                 pos = get(gca, 'Position');
 %                 pos(3) = pos(4) * 1.5;  % width = height * 1.5
 %                 set(gca, 'Position', pos)
-                ylim([0, 2.2]);
+                ylim([0, 2.5]);
             end  % end looping stimulation
             sgtitle(response, 'FontSize', 18); hold off;
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'speed_combined_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'speed_combined_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
                 savefig(gcf, savename);
                 close;
             end
@@ -125,7 +128,7 @@ for j = 1 : length(figlocation_list)
             xlim([0, tperiod]); xlabel('Turn start time in period');
             title(response); hold off;
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'turnStart_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'turnStart_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
                 savefig(gcf, savename);
             end  % end download
         end  % end plot_turnStart
@@ -142,7 +145,7 @@ for j = 1 : length(figlocation_list)
             xlabel('The order of turn'); ylabel('Turn start time in period (s)');
             title(response);
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'turnStart_turnOrder_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'turnStart_turnOrder_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
                 savefig(gcf, savename);
             end  % end download
         end  % end plot_turnStart_turnOrder
@@ -155,7 +158,7 @@ for j = 1 : length(figlocation_list)
             xlabel('The order of turn'); ylabel('Turn start time (s)');
             title(response);
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'turnStartTime_turnOrder_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'turnStartTime_turnOrder_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
                 savefig(gcf, savename);
             end  % end download
         end
@@ -176,8 +179,8 @@ for j = 1 : length(figlocation_list)
             xlabel('toff (s)'); ylabel('Pturn(t <= toff)');
             title(response);
             if download
-                savename = strcat(pwd, '\results_fig', ['\', response, '_', 'cdf_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
-                savefig(gcf, savename);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', ['\', response, '_', 'cdf_track_', num2str(trackNum), '_', expt_info(end-11: end)]);
+                savefig(gcf, savename); close;
             end  % end download
         end  % end plot_cdf_individual
                 
@@ -188,51 +191,53 @@ end  % end loop all result folders
 
 %% plot info (CDF) of a group of larvae to one graph, or other plots about CDF
 tperiod = 15; 
-download = false; 
+download = true; 
 pause on;
-color_pad = {'blue', 'red', 'black'};
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-cdf9 = {[], [], []};  % cdf at toff = 9 for each stim_color respectively;
+color_pad = {'b', 'r', 'k', 'b', 'r', 'k', 'k'};
+stim_color = {'blue1', 'red1', 'bluered1', 'blue2', 'red2', 'bluered2', 'dark'};  % descripiton of the t_stim_start
+cdf9 = {[], [], [], [], [], [], []};  % cdf at toff = 9 for each stim_color respectively;
 tx = 0 : 0.1 : tperiod;  % the time to calculate the average cdf and std
-cdf_tx = {[], [], []};
+cdf_tx = {[], [], [], [], [], [], []};
 plot_cdf9 = false;
-plot_cdf_mean = false;
+plot_cdf_mean = true;
 plot_cdf_trying = false;
 plot_pturn_cdf = true;
 
 
-for k = 1 : 3  % loop for each stimulation
+for k = 1 : 7  % loop for each stimulation
     figure;
     for j = 1 : length(figlocation_list)
         savename = strcat(figlocation_list{j}, '\data.mat');
         load(savename, 'larvae');
         for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
-%         for i = larvaNum{j}  % select certain larva to plot
-            turnStart = getfield(larvae, ['larva', num2str(i)], 'turnStart');
-
-            turnStart_temp = turnStart.(stim_color{k});
-            if ~isempty(turnStart_temp)
-                turnStart_toff = ton_to_toff(turnStart_temp, 6, 9);
-
-                [F, X] = ecdf(turnStart_toff);
-                stairs(X, F, 'Color', color_pad{k});
-                X = X(2 : end); F = F(2 : end);  % delete the duplicated initial point
-                if X(end) < tperiod  % add an end one to the cdf
-                    X = [X ; tperiod]; F = [F; 1];
-                end
-                if X(1) > 0  % add initial zero to the cdf
-                    X = [0; X]; F = [0; F];
-                end
-
-                % find the cdf value at 9
-                F9 = interp1(X, F, 9, 'previous');
-                cdf9{k} = [cdf9{k}, F9];
-
-                % get the cdf at desired time for each larva
-                cdf_tx{k} = [cdf_tx{k}; interp1(X, F, tx, 'previous')];
-            end  % end if turnStart_temp is not empty
-            xlim([0, tperiod]);
-            hold on;
+    %         for i = larvaNum{j}  % select certain larva to plot
+            if getfield(larvae, ['larva', num2str(i)], 'valid')
+                turnStart = getfield(larvae, ['larva', num2str(i)], 'turnStart');
+    
+                turnStart_temp = turnStart.(stim_color{k});
+                if ~isempty(turnStart_temp)
+                    turnStart_toff = ton_to_toff(turnStart_temp, 6, 9);
+    
+                    [F, X] = ecdf(turnStart_toff);
+                    stairs(X, F, 'Color', color_pad{k});
+                    X = X(2 : end); F = F(2 : end);  % delete the duplicated initial point
+                    if X(end) < tperiod  % add an end one to the cdf
+                        X = [X ; tperiod]; F = [F; 1];
+                    end
+                    if X(1) > 0  % add initial zero to the cdf
+                        X = [0; X]; F = [0; F];
+                    end
+    
+                    % find the cdf value at 9
+                    F9 = interp1(X, F, 9, 'previous');
+                    cdf9{k} = [cdf9{k}, F9];
+    
+                    % get the cdf at desired time for each larva
+                    cdf_tx{k} = [cdf_tx{k}; interp1(X, F, tx, 'previous')];
+                end  % end if turnStart_temp is not empty
+                xlim([0, tperiod]);
+                hold on;
+            end  % end if valid
         end  % end looping every larva in one experiment
     end  % end looping every experiment
     ax = gca; ax.FontSize = 20; 
@@ -267,6 +272,7 @@ end
 
 
 % plot the average cdf at each stimulation
+color_pad = {'b', 'r', 'k', 'b--', 'r--', 'k--', 'k:'};
 if plot_cdf_mean
     figure;
     for k = 1 : length(cdf_tx)
@@ -275,7 +281,7 @@ if plot_cdf_mean
         hold on;
     end
     hold off; ax = gca; ax.FontSize = 20; 
-    xlim([0, tperiod]); ylim([0, 1]); 
+    xlim([0, tperiod]); ylim([0, 1]); legend(stim_color)
     xlabel('toff (s)', 'FontSize', 20); ylabel('Average CDF', 'FontSize', 20);
     pause;
     if download
@@ -338,10 +344,10 @@ end
 
 %% average turn rate of multiple larvae across different experiments
 tperiod = 15; 
-download = false; 
+download = true; 
 pause on;
-color_pad = {'b:', 'b--', 'b-'};
-stim_color = {'blue1', 'blue2', 'blue3'};  % descripiton of the t_stim_start
+color_pad = {'r', 'r', 'r', 'k'};
+stim_color = {'red1', 'red2', 'red3', 'dark'};  % descripiton of the t_stim_start
 stepsize = 0.1; binsize = 0.5;  % seconds
 
 figure;
@@ -353,12 +359,14 @@ for k = 1 : length(color_pad)  % loop for each stimulation
         load(savename, 'larvae');
         for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
 %         for i = larvaNum{j}  % select certain larva to plot
-            turnStart = getfield(larvae, ['larva', num2str(i)], 'turnStart');
-            turnStartTime = getfield(larvae, ['larva', num2str(i)], 'turnStartTime');
-            nperiod = getfield(larvae, ['larva', num2str(i)], 'nperiod');
-            
-            turnStart_all = [turnStart_all, turnStart.(stim_color{k})];
-            nperiod_all = nperiod_all + nperiod.(stim_color{k});
+            if getfield(larvae, ['larva', num2str(i)], 'valid')
+                turnStart = getfield(larvae, ['larva', num2str(i)], 'turnStart');
+                turnStartTime = getfield(larvae, ['larva', num2str(i)], 'turnStartTime');
+                nperiod = getfield(larvae, ['larva', num2str(i)], 'nperiod');
+                
+                turnStart_all = [turnStart_all, turnStart.(stim_color{k})];
+                nperiod_all = nperiod_all + nperiod.(stim_color{k});
+            end  % end if valid larva
         end  % end looping larvae
     end  % end looping experiments
     
@@ -394,8 +402,8 @@ close;
 
 %% create a new response with new criteria
 
-save_data = false;
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+save_data = true;
+stim_color = {'red1', 'red2', 'red3', 'dark'};  % descripiton of the t_stim_start
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
     load(savename, 'larvae');
@@ -404,10 +412,12 @@ for j = 1 : length(figlocation_list)
         larva_index = ['larva', num2str(i)];
         pturn = getfield(larvae, larva_index, 'pturn');
         for k = 1 : length(fieldnames(pturn))  % loop for each stimulation
-            if pturn.(stim_color{k})(1) - mean(pturn.(stim_color{k})(3:end)) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
-                larvae.(larva_index).response2.(stim_color{k}) = '1';
+            if pturn.(stim_color{k})(1) - mean(pturn.(stim_color{k})(3:end)) > 0.2  % if the first bin of pturn is much larger than low, call it response
+                larvae.(larva_index).response.(stim_color{k}) = '1';
+            elseif mean(pturn.(stim_color{k})(1:2)) - mean(pturn.(stim_color{k})(3:end)) > 0.2
+                larvae.(larva_index).response.(stim_color{k}) = '1';
             else
-                larvae.(larva_index).response2.(stim_color{k}) = '0';
+                larvae.(larva_index).response.(stim_color{k}) = '0';
             end  % end defining response2
         end  % end looping for every stimulation
     end  % end looping for every larva
@@ -427,7 +437,7 @@ end  % end looping for every experiments
 %% create a label 'valid' for each larva based on if the speed is ever bigger than 0.8 cm/min
 
 save_data = true;
-stim_color = {'blue1', 'blue2', 'blue3'};  % descripiton of the t_stim_start
+stim_color = {'red1', 'red2', 'red3', 'dark'};  % descripiton of the t_stim_start
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
     load(savename, 'larvae');
@@ -451,7 +461,7 @@ end
 
 %% distribution of max speed under different stimulation
 
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+stim_color = {'red1', 'red2', 'red3', 'dark'};  % descripiton of the t_stim_start
 max_speed = [];
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
@@ -459,7 +469,7 @@ for j = 1 : length(figlocation_list)
     for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
         larva_index = ['larva', num2str(i)];
         speed = getfield(larvae, larva_index, 'speed');
-        max_speed = [max_speed, max(speed.(stim_color{1})), max(speed.(stim_color{2})), max(speed.(stim_color{3}))];
+        max_speed = [max_speed, max(speed.(stim_color{1})), max(speed.(stim_color{2})), max(speed.(stim_color{3})), max(speed.(stim_color{4}))];
     end
 end
 
@@ -468,7 +478,7 @@ xlabel('Maximum speed under one stimulation (cm/min)'); ylabel('Count');
 savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_max_speed');
 savefig(gcf, savename);
 
-%% histogram of nperiod of all long tracks.
+%% histogram of nperiod of all long tracks (larvae), % of long turn time.
 
 stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 time_larvae = [];
@@ -532,5 +542,5 @@ xlabel('End time of start early tracks (min)'); ylabel('Count');
 savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_start_early_track_endFrame_p');
 savefig(gcf, savename);
 %% save a copy
-savename = strcat(basedir_cell{1}, '\results');
+savename = strcat(basedir_cell{1}, '\results_new');
 copyfile('plot_from_data.m', savename)  % copy the file to the location

@@ -2,10 +2,10 @@
 
 %% create pturn matrix from the structure larvae
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Bl_Sq_2to67P_15_7_22P'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
     };
 x_cell = {
-    1:8
+    1:21
 %     [25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
 
@@ -17,7 +17,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     basedir = basedir_cell{folder_index};
     x = x_cell{folder_index};
     d = dir(fullfile(basedir, 'matfiles', '*.mat'));
-    mkdir(fullfile(basedir, 'results'));  % create a overall results folder to contain general data
+    mkdir(fullfile(basedir, 'results_new'));  % create a overall results folder to contain general data
     for k = 1 : length(x)  % loop for each expt in the eset
         j = j + 1;
         figlocation_list{j} = fullfile(basedir, ['results', d(x(k)).name(end-16:end-4)]);
@@ -115,7 +115,8 @@ writetable(larva2track, strcat(basedir_cell{1}, '\results_new', '\larva2track.xl
 % end
 
 %% Plot pturn from data.mat ===================================================
-savename = strcat(basedir_cell{1}, '\results_clean', '\data_clean.mat');  % there should be only 1 basedir in basedir_cell
+basedir = basedir_cell{1};
+savename = strcat(basedir, '\results_new', '\data.mat');  % there should be only 1 basedir in basedir_cell
 load(savename);
 
 % order types by whose numbers of larvae in descending order
@@ -130,8 +131,8 @@ writetable(table_response_nlarva_des, strcat(basedir_cell{1}, '\results_new', '\
 
 denoise =false;
 % Initialize some values for plotting below
-pturn = pturn_111;  % what pturn to use, could be pturn_111 or pturn_all, etc.
-prefix = '111_';  % use '001_' or 'all_' etc
+pturn = pturn_all;  % what pturn to use, could be pturn_111 or pturn_all, etc.
+prefix = 'all_';  % use '001_' or 'all_' etc
 if denoise  % the p of first bin minuses the average of rest bins
     Pbaseline = (pturn(:, 5) + pturn(:, 10) + pturn(:, 15)) / 3;
     Pblue = pturn(:,1) - Pbaseline;
@@ -225,7 +226,7 @@ savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each
 savefig(gcf, savename);
 
 % study the threshold of deciding if the larva turns
-criteria = 'pturn1-pturn345';
+criteria = 'pturn12-pturn_rest';
 switch criteria
     case 'pturn1-pturn_rest'
         criteria_blue = pturn_all(:, 1) - mean(pturn_all(:, 2:5), 2);
@@ -249,7 +250,7 @@ hold off;
 switch criteria
     case 'pturn1-pturn_rest'
         xlabel('pturn(0<t<3s) - p(turn(3<t<15s)', 'FontSize', 20); ylabel('Count', 'FontSize', 20);
-        savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\turn_criteria_1');
+        savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\turn_criteria_1');
         savefig(gcf, savename);
     case 'pturn12-pturn_rest'
         xlabel('pturn(0<t<6s) - p(turn(6<t<15s)', 'FontSize', 20); ylabel('Count', 'FontSize', 20);
@@ -276,9 +277,11 @@ cbar = colorbar;
 colormap parula;
 cbar.Label.String = 'Pturn during the first 3 s of both blue and red';
 if denoise
-    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); savefig(gcf, [prefix, 'pbluered-pb_pr_denoise'])
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb_pr_denoise']);
+    xlim([0, 0.8]); ylim([0, 0.8]); savefig(gcf, savename)
 else
-    xlim([0, 0.85]); ylim([0, 0.85]); savefig(gcf, [prefix, 'pbluered-pb_pr'])
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb_pr']);
+    xlim([0, 0.8]); ylim([0, 0.8]); savefig(gcf, savename)
 end
 
 
@@ -325,10 +328,10 @@ xlabel('p(turn|blue+red)[0, 3s]'); ylabel('Predicted by Bayes Theorem');
 %%  histogram of some pturn
 % mean(pturn_all(:, 3:5), 'all')
 % std(pturn_all(:, 3:5), 1, "all")
-download = true;
+download = false;
 check_off = false;  % check the pturn when light is off, multiple columns.
-positive_pturn = true;  % if force negative pturn to be zero
-for denoise = [true]  % [true, false] for both plots
+positive_pturn = false;  % if force negative pturn to be zero
+for denoise = [false]  % [true, false] for both plots
     % Initialize some values for plotting below
     pturns = {pturn_all, pturn_001, pturn_011, pturn_101, pturn_111};
     prefixes = {'all_', '001_', '011_', '101_', '111_'};
@@ -433,13 +436,13 @@ for denoise = [true]  % [true, false] for both plots
                 lbluered.Color = [0, 0, 0]; lbluered.DisplayName = ['\lambda_{bluered} = ', num2str(lambda_bluered)];
                 legend('Location', 'eastoutside'); hold off
                 xlabel('Average Nturns for a larva during the first 3 s of stimulation high'); ylabel('Proportion of maggots');
-        end
+        end  % end swith fit function
         title([prefix(1:end-1), ' ', fit_func]);
         if denoise
             title([prefix(1:end-1), ' ', fit_func, ' Denoise']);
             if download
-                savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'hist_pturn_denoise_average_off_', fit_func]);
-                savefig(gcf, savename);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\', [prefix, 'hist_pturn_denoise_', fit_func]);
+                savefig(gcf, savename); close;
             end
         else
             if download
@@ -505,9 +508,13 @@ cbar.Ticks = [0, 1];
 cbar.TickLabels = {'Superlinear'; 'Sublinear'};
 hold on; plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
 if denoise
-    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); savefig(gcf, [prefix, 'super_sub-lineaer_denoise']);
+    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'super_sub-lineaer_denoise']);
+    savefig(gcf, savename);
 else
-    xlim([0, 1]); ylim([0, 1]); savefig(gcf, [prefix, 'super_sub-lineaer']);
+    xlim([0, 1]); ylim([0, 1]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'super_sub-lineaer']);
+    savefig(gcf, savename);
 end
 
 
@@ -526,25 +533,33 @@ cbar.Label.String = 'pblue + pred - p(blue+red)';
 cbar.Limits = [-0.6, 0.6];
 hold on; plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
 if denoise
-    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); savefig(gcf, [prefix, 'linearity_denoise']);
+    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'linearity_denoise']);
+    savefig(gcf, savename);
 else
-    xlim([0, 1]); ylim([0, 1]); savefig(gcf, [prefix, 'linearity']);
+    xlim([0, 1]); ylim([0, 1]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'linearity']);
+    savefig(gcf, savename);
 end
 
 
-% percentage change
+% percentage change pred-pblue-percentage change
 % x = (pturn_all(:, 11) - pturn_all(:, 1)) ./ pturn_all(:, 11);
 % y = (pturn_all(:, 11) - pturn_all(:, 6)) ./ pturn_all(:, 11);
 x = pturn_all(:, 1); y = pturn_all(:, 6); 
 sz = 40;  % size of dots in pixels
-c = (pturn_all(:, 11) - pturn_all(:, 6)) ./ pturn_all(:, 6);
+c = (pturn_all(:, 11) - pturn_all(:, 1)) ./ pturn_all(:, 1);
 scatter(x, y, sz, c, 'filled')
 cbar = colorbar;
 colormap parula;
 lims = clim;
 clim([lims(1), 5]);  % to change the lim of colorbar, and the rearrange the color
 % xlabel('(Pboth - Pblue)/Pboth'); ylabel('(Pboth - Pred)/Pboth'); cbar.Label.String = 'Pboth';
-xlabel('Pblue'); ylabel('Pred'); cbar.Label.String = '(Pboth - Pred)/Pred';
+xlabel('Pblue'); ylabel('Pred'); cbar.Label.String = '(Pboth - Pblue)/Pblue';
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', ['all_', 'pred-pblue-pbluered_relative_increase_blue']);
+savefig(gcf, savename);
+
+
 % percentage change percentage_change-pblue
 % x = (pturn_all(:, 11) - pturn_all(:, 1)) ./ pturn_all(:, 11); 
 x = pturn_all(:, 1); 
@@ -767,8 +782,8 @@ savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\pcc_pturn_bluer
 savefig(gcf, savename);
 
 
-% find the info from larva index 
-index_larva = [130];
+% plot the pturn from larva index 
+index_larva = 95:104;
 edges = 0:3:15;
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;
 for j = 1:length(index_larva)  % plot the j-th larva
@@ -783,6 +798,8 @@ for j = 1:length(index_larva)  % plot the j-th larva
     bar(xbar, P_bluered); ylim([0, 1]);
     title(['larva ', num2str(index_larva(j))]);
 end
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\pturn_111');
+savefig(gcf, savename);
 
 %% save the current file to \results in the basedir
 savename = strcat(basedir_cell{1}, '\results');

@@ -155,3 +155,6 @@ If running test experiment without any larva, the processBIN won't succeed. Ther
 After put black agar plate to the right place, wait a few minutes after all dusts falling down to start acquization. Otherwise too many bad tracks will fail to process BIN
 
 Should run processMMF.m from its directory.
+
+When analyzing the data, there is a chance the globalquantity doesn't contain ledVals, also there are BIN files saved in extracted folder and . 
+I don't know the reason, but close the app and re-transfer the BIN files can possibly solve the problem.
