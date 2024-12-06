@@ -118,6 +118,15 @@ writetable(larva2track, strcat(basedir_cell{1}, '\results_new', '\larva2track.xl
 savename = strcat(basedir_cell{1}, '\results_clean', '\data_clean.mat');  % there should be only 1 basedir in basedir_cell
 load(savename);
 
+% order types by whose numbers of larvae in descending order
+name_tyep = dec2bin(0:7);  % 1-indexed ---------
+nlarva_type = [];  % number of larvae belonging to every type in order of dec2bin(0:63)
+for s = 1 : length(pturn_type)
+    nlarva_type = [nlarva_type, size(pturn_type{s}, 1)];
+end
+[nlarva_type_des, sortIdx] = sort(nlarva_type, 'descend');
+table_response_nlarva_des = table(name_tyep(sortIdx, :), nlarva_type_des.');
+writetable(table_response_nlarva_des, strcat(basedir_cell{1}, '\results_new', '\response_nlarva_des.xlsx'))
 
 denoise =false;
 % Initialize some values for plotting below
