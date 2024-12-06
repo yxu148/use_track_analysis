@@ -458,8 +458,12 @@ t_frame = eset.expt.track(j).dq.eti;  % interpolated time (s) for each frame of 
 turnStartTime =  eset.expt.track(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
 figure;
 plot(t_frame, v_frame); hold on;
-plot(turnStartTime, 0.3, 'ok'); hold off; legend('Speed', 'Turn start')
+plot(t_frame, medfilt1(v_frame, 301));  % 1-D median filter with 301-order, median of data in 301 frames window.
+plot(turnStartTime, 0.3, 'ok'); hold off; 
+legend('Speed', 'filtered', 'Turn start')
 xlabel('Time (s)'); ylabel('Speed (cm/min)'); title(['Track ', num2str(j)])
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\v_t_track', num2str(j)]);
+savefig(gcf, savename); 
 
 
 % speed of single larvae verses time in period
