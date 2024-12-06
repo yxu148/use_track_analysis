@@ -298,11 +298,11 @@ for denoise = [true]  % [true, false] for both plots
         edge_min = floor(edge_min * 10) / 10;  % find it's left boundary with 1 decimal
         edge_max = max([Pblue; Pred; Pbluered]);
         edge_max = ceil(edge_max * 10) / 10;  % find it's right boundary with 1 decimal
-        edges = edge_min : 0.05 : edge_max;
+        edges = edge_min : 0.1 : edge_max;  % use 0.05 before
         % get the counts
-        nblue = histcounts(Pblue, edges, 'Normalization', 'probability');
-        nred = histcounts(Pred, edges, 'Normalization', 'probability');
-        nbluered = histcounts(Pbluered, edges, 'Normalization', 'probability');
+        nblue = histcounts(Pblue, edges);  % 'Normalization', 'probability'
+        nred = histcounts(Pred, edges);
+        nbluered = histcounts(Pbluered, edges);
         centers = edges(1 : end-1) + diff(edges) / 2; 
         centers_blue = centers; centers_red = centers; centers_bluered = centers;
         % % use the same number of bins (nbins) for each histogram but different size of bin, not good
@@ -339,7 +339,7 @@ for denoise = [true]  % [true, false] for both plots
                 bbluered.FaceAlpha = 0.5;  bbluered.DisplayName = 'Blue and red'; bbluered.BarWidth = 0.6;
                 hold off; xticks(edges); xlim([0, 1]);
                 legend('Location', 'eastoutside');
-                xlabel('Pturn during the first 3 s of stimulation high'); ylabel('Proportion of maggots');
+                xlabel('Pturn during the first 3 s of stimulation high'); ylabel('Number of maggots');
             case 'Poisson'
                 edges_continuous = 0 : 40;
                 centers_continuous = edges_continuous(1 : end-1) + diff(edges_continuous) / 2; 
@@ -371,8 +371,8 @@ for denoise = [true]  % [true, false] for both plots
             end
         else
             if download
-                savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'hist_pturn_', fit_func]);
-                savefig(gcf, savename);
+                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\', [prefix, 'hist_pturn_', fit_func, '_count']);
+                savefig(gcf, savename); close
             end
         end
 
