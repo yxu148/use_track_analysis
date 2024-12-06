@@ -61,15 +61,34 @@ for j = 1 : length(figlocation_list)
         end  % end if valid larvae
     end  % end looping each larva in one experiment
 end  % end loop each experiment
-pturn_all = [pturn_000; pturn_001; pturn_010; pturn_011; pturn_100; pturn_101; pturn_110; pturn_111];
+% pturn_all = [pturn_000; pturn_001; pturn_010; pturn_011; pturn_100; pturn_101; pturn_110; pturn_111];
+% trackNum_all = [trackNum_000; trackNum_001; trackNum_010; trackNum_011; trackNum_100; trackNum_101; trackNum_110; trackNum_111];
+% expt_all = [expt_000; expt_001; expt_010; expt_011; expt_100; expt_101; expt_110; expt_111];
+% larva_all = [larva_000; larva_001; larva_010; larva_011; larva_100; larva_101; larva_110; larva_111];
+% 
 
-savename = strcat(basedir_cell{1}, '\results_clean', '\data_clean.mat');  % there should be only 1 basedir in basedir_cell
-if isfile(savename)
-    save(savename, 'pturn_all', 'pturn_000', 'pturn_001', 'pturn_010', 'pturn_011', 'pturn_100', 'pturn_101', 'pturn_110', 'pturn_111', '-append');
-else
-    save(savename, 'pturn_all', 'pturn_000', 'pturn_001', 'pturn_010', 'pturn_011', 'pturn_100', 'pturn_101', 'pturn_110', 'pturn_111')
+% put array from different cell together to one array
+[pturn_all, trackNum_all, expt_all, larva_all, response_all] = deal([]);  % all variables have the same defination
+for s = 1 : length(pturn_type)
+    pturn_all = [pturn_all; pturn_type{s}];
+    trackNum_all = [trackNum_all; trackNum_type{s}];
+    expt_all = [expt_all; expt_type{s}];
+    larva_all = [larva_all; larva_type{s}];
+    response_all = [response_all; response_type{s}];
 end
-% writematrix(pturn_all, strcat(pwd, '\pturn.xlsx'));
+
+larva2track = table([1 : length(pturn_all)].', larva_all, trackNum_all, response_all, expt_all);
+
+savename = strcat(basedir_cell{1}, '\results_new', '\data.mat');  % there should be only 1 basedir in basedir_cell
+if isfile(savename)
+    save(savename, 'pturn_all', 'pturn_type', '-append');
+    save(savename, 'larva2track', '-append')
+else
+    save(savename, 'pturn_all', 'pturn_type')
+    save(savename, 'larva2track')
+end
+writematrix(pturn_all, strcat(basedir_cell{1}, '\results_new', '\pturn.xlsx'));
+writetable(larva2track, strcat(basedir_cell{1}, '\results_new', '\larva2track.xlsx'))
 % writematrix(pturn_all, 'pturn.csv');
 
 % % remove certain fields from a structure
