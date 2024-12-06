@@ -159,6 +159,29 @@ pturn_all_ordered_bytype = [order_matrix_rows_from_column(pturn_000, column_inde
 imagesc(pturn_all_ordered_bytype, [0, 1]); 
 
 
+% automatical naming
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+ntype = 2 ^ (length(stim_color));  % int, -1 if exclude 'dark'
+name_type = dec2bin(0:ntype-1);  % 1-indexed
+name_type_cell = {};  % 1-by-numofBehaviorType cell
+for temp = 1 : length(name_type)
+    name_type_cell(temp) = {name_type(temp, :)};
+end
+nlarva_type = [];  % number of larvae belonging to every type in order of dec2bin(0:63)
+for s = 1 : length(pturn_type)
+    nlarva_type = [nlarva_type, size(pturn_type{s}, 1)];
+end
+% find index to seperate diff types, only work if nlarva_type is longer than 1
+boundary_type = zeros(1, length(nlarva_type) - 1) - 1;  % initialize with -1
+boundary_type(1) = nlarva_type(1);  % 1-indexed
+boundary_temp = nlarva_type(1);
+for temp = 2 : length(nlarva_type)
+    boundary_temp = boundary_temp + nlarva_type(temp);
+    boundary_type(temp) = boundary_temp;
+end
+% replace the name of types with less than 5 larvae to '_'
+name_type_cell(nlarva_type<5) = {'\_'};
+
 % plot the matrix pturn_all
 imagesc(pturn_all, [0, 1]); 
 xlabel('3-second bins'); ylabel('Index of larva');
