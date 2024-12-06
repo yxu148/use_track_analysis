@@ -251,9 +251,9 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
                     larvae.(larva_index).turnStartTime = turnStartTime;
                     larvae.(larva_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
                     larvae.(larva_index).turnStart_std.(stim_color{i}) = turnStart_std;
-                    if N(1)/nperiod - mean(N(2:end)/nperiod) > 0.2  % if the first bin of pturn is much larger than the rest, call it response
+                    if N(1)/nperiod - mean(N(3:end)/nperiod) >= 0.2  % if the first bin of pturn is much larger than the low intensity bins, call it response
                         larvae.(larva_index).response.(stim_color{i}) = '1';
-                    elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) > 0.2  % if the first 2 bins of pturn are much larger than the rest
+                    elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) >= 0.2  % if the first 2 bins of pturn are much larger than the rest
                         larvae.(larva_index).response.(stim_color{i}) = '1';
                     else
                         larvae.(larva_index).response.(stim_color{i}) = '0';
