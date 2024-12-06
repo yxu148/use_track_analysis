@@ -213,6 +213,17 @@ set(gcf, 'Position', gcf().Position .* [1, 1, 0.5, 1])  % shink the width by hal
 savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each_relalative_discrete');
 savefig(gcf, savename);
 
+% colormap of pturn of (both-blue)/both, (both-red)/both
+figure;
+notes = {'(Pbluered - Pblue) / Pbluered', '(Pbluered - Pred) / Pbluered'};  % to label what is it
+imagesc([(Pbluered - Pblue) ./ Pbluered, (Pbluered - Pred) ./ Pbluered]);
+xline([0.5, 1.5], 'w', notes); yline(boundary_type + 0.5, 'w', name_type_cell);
+ylabel('Index of larva'); set(gca,'XTick',[])
+cbar = colorbar; cbar.Label.String = 'Turn possibility relative change';
+set(gcf, 'Position', gcf().Position .* [1, 1, 0.5, 1])  % shink the width by half
+savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each_relalative');
+savefig(gcf, savename);
+
 % study the threshold of deciding if the larva turns
 criteria = 'pturn1-pturn345';
 switch criteria
