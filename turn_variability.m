@@ -465,6 +465,25 @@ xlabel('Time (s)'); ylabel('Speed (cm/min)'); title(['Track ', num2str(j)])
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\v_t_track', num2str(j)]);
 savefig(gcf, savename); 
 
+% lowpass filtered speed of single larvae verses experimental time
+frame_rate = 20;  % number of frames per second
+j = 8;  % track number
+v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+t_frame = eset.expt.track(j).dq.eti;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+fs = frame_rate;  % sample frequency (Hz)
+N = length(v_frame);  % total number of samples
+Y = fft(v_frame);
+figure; subplot(2, 1, 1)
+plot(t_frame, v_frame);
+xlabel('Time (s)'); ylabel('Speed (cm/min)');
+subplot(2, 1, 2)
+plot(fs*(0:N-1)/N, abs(Y)/N);
+xlabel('Frequency (Hz)'); ylabel('Magnitude');
+% It doesn't smooth it enough even with very small lowpass filter
+figure;
+lowpass(v_frame, 0.05, 20)
+
+
 
 % speed of single larvae verses time in period
 j = 1;  % track number
