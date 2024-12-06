@@ -470,6 +470,19 @@ lims = clim;
 clim([lims(1), 5]);  % to change the lim of colorbar, and the rearrange the color
 % xlabel('(Pboth - Pblue)/Pboth'); ylabel('(Pboth - Pred)/Pboth'); cbar.Label.String = 'Pboth';
 xlabel('Pblue'); ylabel('Pred'); cbar.Label.String = '(Pboth - Pred)/Pred';
+% percentage change percentage_change-pblue
+% x = (pturn_all(:, 11) - pturn_all(:, 1)) ./ pturn_all(:, 11); 
+x = pturn_all(:, 1); 
+y = pturn_all(:, 11);
+% y = pturn_all(:, 11) - pturn_all(:, 6);
+% y = (pturn_all(:, 11) - pturn_all(:, 6)) ./ pturn_all(:, 11);
+plot(x, y, 'bo'); % hold on;
+% plot([-1, 1], [-1, 1], 'k--'); hold off;
+axis equal;
+xlabel('Pblue'); ylabel('Pboth');
+xlim([0, 1]); ylim([0, 1]);
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', ['all_', 'pboth-pblue']);
+savefig(gcf, savename);
 
 
 % Kullback–Leibler divergence
