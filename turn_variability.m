@@ -401,6 +401,17 @@ xlabel(ax(1), 'ton (s)'); ylabel(ax(1), 'Turn rate (min^{-1})'); sgtitle(['Steps
 savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\rate_turn_ton_individual');
 savefig(gcf, savename); 
 
+j = 2;  % track number
+t = eset.expt.track;
+t_running = t(j).getSubFieldDQ('run', 'eti') ;  % second, time when larva is running
+t_turning = t(j).getSubFieldDQ('reorientation', 'eti') ;  % second, time when larva is running
+figure; plot(t_running, ones(1, length(t_running)), '.k', t_turning, 2 *ones(1, length(t_turning)), '.r' ); ylim([-10, 10])
+t_turn_start = t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start') ;  % second, time when larva starts a turn
+t_turn_end = t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'end') ;  % second, time when larva starts a turn
+duration_turn = t_turn_end - t_turn_start;  % duration of all turns
+longturn_time = sum(duration_turn(duration_turn > tperiod));  % second, double, total pause (labeled as turn but too long,  longer than a period) time of a track
+unlabeled_time = (t(j).npts - length(t_running) - length(t_turning)) / frame_rate;  % second, double, total time not labeled as either run or turn, invalid, mostly in the beginning
+
 
 %% Speed
 
