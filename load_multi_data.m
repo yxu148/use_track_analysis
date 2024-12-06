@@ -481,6 +481,64 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             close;
         end  % end plotting speed_run_individual
 
+        % create a structure tracks that have all tracks' info saved,
+        % including short tracks
+        if track_pturn
+            t = esets.(eset_name).expt(k).track;
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            clear tracks
+            if isfile(savename)
+                load(savename, 'tracks');
+            end
+            turnStart_mean = zeros(1, length(xbar));  % the average turnTime that falls to one bin
+            turnStart_std = zeros(1, length(xbar));  % standard error = standard deviation / sqrt(N)
+            for i = 1 : length(t_stim_start)  % ith intensity of stimulation--------------------
+                for j = 1 : length(t)
+                    % 'led12Val_ton' fails some time if stimulation isn't strict square wave
+                    turnStart =  t(j).getSubFieldDQ('reorientation', 'led12Val_ton', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % turn start time in period, ton means period starts with light on
+                    turnStartTime =  t(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+                    turnStart = turnStart((t_stim_start(i) <= turnStartTime) & (turnStartTime < t_stim_end(i))); %only keep the reorientation whose start time falls into the i-th intensity of stimulation
+                    % number of period of stimulation that falls into certain intensity
+                    t_start = max([t_stim_start(i), esets.(eset_name).expt(k).elapsedTime(t(j).startFrame + 1)]);  % time (s) of start for track j under i-th  intensity of stimulation 
+                    t_end = min([t_stim_end(i), esets.(eset_name).expt(k).elapsedTime(t(j).endFrame-2)]);  % temporal - 2
+                    nperiod = (t_end - t_start) / tperiod;
+                    [N, ~] = histcounts(turnStart, edges);  % assume larvae can only turn one time within tbin
+                    pturn = N/nperiod;
+                    pturn_error = sqrt(N)/nperiod;
+                    for r = 1 : (length(edges) - 1)
+                        turnStart_bin = turnStart((turnStart > edges(r)) & (turnStart < edges(r+1)));
+                        turnStart_mean(r) = mean(turnStart_bin);  % the mean turn start time in period within each bin
+                        turnStart_std(r) = std(turnStart_bin, 1);
+                    end
+
+                    track_index = ['track', num2str(esets.(eset_name).expt(k).track(j).trackNum)];
+                    % create a new structure tracks
+                    tracks.(track_index).startFrame = esets.(eset_name).expt(k).track(j).startFrame;
+                    tracks.(track_index).endFrame = esets.(eset_name).expt(k).track(j).endFrame;
+                    tracks.(track_index).expt_info = d(x(k)).name(1:end-4);  % string
+                    tracks.(track_index).nperiod.(stim_color{i}) = nperiod;
+                    tracks.(track_index).pturn.(stim_color{i}) = N/nperiod;
+                    tracks.(track_index).pturn_error.(stim_color{i}) = sqrt(N)/nperiod;
+                    tracks.(track_index).turnStart.(stim_color{i}) = turnStart;
+                    tracks.(track_index).turnStartTime = turnStartTime;
+                    tracks.(track_index).turnStart_mean.(stim_color{i}) = turnStart_mean;
+                    tracks.(track_index).turnStart_std.(stim_color{i}) = turnStart_std;
+                    if N(1)/nperiod - mean(N(3:end)/nperiod) >= 0.2  % if the first bin of pturn is much larger than the low intensity bins, call it response
+                        tracks.(track_index).response.(stim_color{i}) = '1';
+                    elseif mean(N(1:2)/nperiod) - mean(N(3:end)/nperiod) >= 0.2  % if the first 2 bins of pturn are much larger than the rest
+                        tracks.(track_index).response.(stim_color{i}) = '1';
+                    else
+                        tracks.(track_index).response.(stim_color{i}) = '0';
+                    end
+                end  % end looping tracks
+            end  % end looping different stimulation condition
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                save(savename, 'tracks', '-append')
+            else
+                save(savename, 'tracks')
+            end
+        end % end track_info
 
         if track_info
             % Track info [track_ID, startFrame, startX(pixel), endY(pixel), endFrame,
