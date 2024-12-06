@@ -502,6 +502,34 @@ xlabel('Percentage of long turn time of each larvae (%)'); ylabel('Probability')
 title(['Total ', num2str(length(longTurnPercentLarvae)), ' larvae, only valid']);
 savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_longTurnTime_valid');
 savefig(gcf, savename);
+
+%% histogram of start time of all tracks
+startFrame_all = [];
+endFrame_all = [];
+for j = 1 : length(figlocation_list)
+    savename = strcat(figlocation_list{j}, '\data.mat');
+    load(savename, 'tracks');
+    for i = 1 : length(fieldnames(tracks))  % loop every track in the experiment
+        track_index = ['track', num2str(i)];
+        startFrame = getfield(tracks, track_index, 'startFrame');
+        startFrame_all = [startFrame_all, startFrame];
+        endFrame = getfield(tracks, track_index, 'endFrame');
+        endFrame_all = [endFrame_all, endFrame];
+    end
+end
+figure; histogram(startFrame_all/1200, 30);  % nbins
+xlabel('Start time of all tracks (min)'); ylabel('Count');
+savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_track_startFrame');
+savefig(gcf, savename);
+
+figure; histogram(endFrame_all/1200, 30);  % nbins
+xlabel('End time of all tracks (min)'); ylabel('Count');
+savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_track_endFrame');
+savefig(gcf, savename);
+
+figure; histogram(endFrame_all(startFrame_all < 2400)/1200, 30, 'Normalization', 'probability');  % nbins
+xlabel('End time of start early tracks (min)'); ylabel('Count');
+savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_start_early_track_endFrame_p');
 savefig(gcf, savename);
 %% save a copy
 savename = strcat(basedir_cell{1}, '\results');
