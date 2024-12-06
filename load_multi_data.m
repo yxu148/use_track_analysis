@@ -36,8 +36,12 @@ end
 
 %% Draw basic figures, like led1Val, track_length, turn_start_time, num_moving_maggots
 tperiod = 15;  % in seconds, period of stimulation time
-nperiods = 79;  % select tracks that have [nperiods, Nperiods] length
-Nperiods = 121;
+latest_start = 120;  % seconds, select the tracks that start earlier than latest_start time. 80% length
+earliest_end = 1680;  % seconds, select the tracks that end later than earliest_end time.
+t_stim_start = [0, 600, 1200];  % start time (s) of each intensity of stimulation
+t_stim_end = [600, 1200, 1800];
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+frame_rate = 20;  % number of frames per second
 download = false;  % if true, plot and save figures including led1Val, Track length, Num of maggots; otherwise not plotting, but all valuables are prepared
 % add led12Val, and select long tracks
 for folder_index = 1 : length(x_cell)  % loop for each basedir folder
@@ -119,6 +123,46 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
             savefig(gcf, savename); close;
         end
         
+
+        % create structure larvae, add basic info
+        if create_larvae
+            t = esets.(eset_name).expt(k).track;
+            t = t(([t.startFrame] <= latest_start * frame_rate) & ([t.endFrame] >= earliest_end * frame_rate));
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                load(savename, 'larvae');
+            else
+                clear larvae;
+            end
+            for j = 1 : length(t)
+                larva_index = ['larva', num2str(j)];
+                % create a new structure larvae, and add basic info
+                larvae.(larva_index).trackNum = t(j).trackNum;  % integer
+                larvae.(larva_index).expt_info = d(x(k)).name(1:end-4);  % string
+                larvae.(larva_index).startFrame = t(j).startFrame;
+                larvae.(larva_index).endFrame = t(j).endFrame;
+                % add longturn_time (s), unlabeled_time (s), startLabelTime (s)
+                t_running = t(j).getSubFieldDQ('run', 'eti') ;  % second, time when larva is running
+                t_turning = t(j).getSubFieldDQ('reorientation', 'eti') ;  % second, time when larva is running
+                % figure; plot(t_running, ones(1, length(t_running)), '.k', t_turning, 2 *ones(1, length(t_turning)), '.r' ); ylim([-10, 10])
+                t_turn_start = t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'start') ;  % second, time when larva starts a turn
+                t_turn_end = t(j).getSubFieldDQ('reorientation', 'eti', 'position', 'end') ;  % second, time when larva starts a turn
+                duration_turn = t_turn_end - t_turn_start;  % duration of all turns
+                larvae.(larva_index).longturn_time = sum(duration_turn(duration_turn > 2*tperiod));  % second, double, total pause (labeled as turn but too long,  longer than a period) time of a track
+                larvae.(larva_index).unlabeled_time = (t(j).npts - length(t_running) - length(t_turning)) / frame_rate;  % second, double, total time not labeled as either run or turn, invalid, mostly in the beginning
+                larvae.(larva_index).startLabelTime = min(t_running(1), t_turning(1));  % replace this with track start time to get nperiod in the future
+            end  % end looping long tracks
+        end  % end create_larvae
+
+        % if save the structure larvae to data
+        if save_data
+            savename = strcat(basedir,['\results', d(x(k)).name(end-16:end-4)], '\data.mat');
+            if isfile(savename)
+                save(savename, 'larvae', '-append')
+            else
+                save(savename, 'larvae')
+            end
+        end
 
         % display the track length info
         t = esets.(eset_name).expt(k).track;
