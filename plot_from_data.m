@@ -470,25 +470,38 @@ savefig(gcf, savename);
 
 %% histogram of nperiod of all long tracks.
 
-stim_color = {'blue1', 'blue2', 'blue3'};  % descripiton of the t_stim_start
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 time_larvae = [];
+longTurnPercentLarvae = [];
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
     load(savename, 'larvae');
     for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
         larva_index = ['larva', num2str(i)];
+
         if larvae.(larva_index).valid
             nperiod = getfield(larvae, larva_index, 'nperiod');
             time = (nperiod.(stim_color{1}) + nperiod.(stim_color{2}) + nperiod.(stim_color{3})) * 15 / 60;  % in min
             time_larvae = [time_larvae, time];
+            longturn_time = getfield(larvae, larva_index, 'longturn_time');
+            time = double(getfield(larvae, larva_index, 'endFrame') - getfield(larvae, larva_index, 'startFrame')) / 20;  % seconds
+            longTurnPercentLarvae = [longTurnPercentLarvae, longturn_time / time * 100];
         end
     end
 end
 
-figure; histogram(time_larvae);
-xlabel('Length of long tracks (min)'); ylabel('Count');
+figure; histogram(time_larvae, 'Normalization', 'probability');
+xlabel('Length of long tracks (min)'); ylabel('Probability');
 title(['Total ', num2str(length(time_larvae)), ' larvae']);
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_track_length');
+savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_track_length');
+savefig(gcf, savename);
+
+
+figure; histogram(longTurnPercentLarvae, 'Normalization', 'probability');
+xlabel('Percentage of long turn time of each larvae (%)'); ylabel('Probability');
+title(['Total ', num2str(length(longTurnPercentLarvae)), ' larvae, only valid']);
+savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\hist_longTurnTime_valid');
+savefig(gcf, savename);
 savefig(gcf, savename);
 %% save a copy
 savename = strcat(basedir_cell{1}, '\results');
