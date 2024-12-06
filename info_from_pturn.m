@@ -194,6 +194,24 @@ mkdir(fullfile(basedir, '\results_new', 'results_fig'));
 savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_discrete');
 savefig(gcf, savename);
 
+% colormap of pturn of both-blue, both-red
+figure;
+notes = {'(Pbluered - Pblue) / Pbluered', '(Pbluered - Pred) / Pbluered'};  % to label what is it
+pturn_change = [(Pbluered - Pblue) ./ Pbluered, (Pbluered - Pred) ./ Pbluered];
+zmin = min(pturn_change, [], 'all');  % min, max value of the matrix
+clim = [zmin, 1];  % color limit
+im = imagesc([colum1, colum2], clim);
+xline([0.5, 1.5], 'w', notes); yline(boundary_type + 0.5, 'w', name_type_cell);
+ylabel('Index of larva'); set(gca,'XTick',[])
+grey = [0.5, 0.5, 0.5];  % grey in RGB
+colormap([repmat(grey, 4, 1); parula(4)]);  % keep the 2 colormaps the same size
+caxis([-1, 1]);  % assign the color axis to [-1, 1], so 0 is in the middle, divide grey and parula
+cbar = colorbar; cbar.Label.String = 'Turn possibility relative change';  % to show colorbar
+cbar.Limits = [zmin, 1];  % only show the colorbar from min to 1
+cbar.Ticks = [0:0.25:1];
+set(gcf, 'Position', gcf().Position .* [1, 1, 0.5, 1])  % shink the width by half
+savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each_relalative_discrete');
+savefig(gcf, savename);
 
 % study the threshold of deciding if the larva turns
 criteria = 'pturn1-pturn345';
