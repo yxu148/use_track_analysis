@@ -322,19 +322,19 @@ for denoise = [true]  % [true, false] for both plots
                 figure; hold on;
                 lblue = plot(fblue, centers_blue(nblue~=0), nblue(nblue~=0), 'o');  % return the line objects, raw data and fitted line
                 bblue = bar(centers_blue(nblue~=0), nblue(nblue~=0), 1, 'FaceColor', [0, 0, 1]);
-                lblue(1).Color = [0, 0, 1]; lblue(1).MarkerFaceColor = [0, 0, 1]; lblue(1).DisplayName = 'Blue'; % properties of dot data
+                lblue(1).Color = [0, 0, 1]; lblue(1).MarkerFaceColor = [0, 0, 1]; lblue(1).DisplayName = ['Blue, mean ', num2str(mean(Pblue)), ', std ', num2str(std(Pblue))]; % properties of dot data
                 lblue(2).Color = [0, 0, 1]; lblue(2).DisplayName = ['\mu = ', num2str(fblue.b1), ', \sigma = ', num2str(fblue.c1/sqrt(2))];  % properties of fit line
                 bblue.FaceAlpha = 0.5; bblue.DisplayName = 'Blue'; bblue.BarWidth = 1;
         
                 lred = plot(fred, centers_red(nred~=0), nred(nred~=0), 'o');  % return the line object
                 bred = bar(centers_red(nred~=0), nred(nred~=0), 1, 'FaceColor', [1, 0, 0]);
-                lred(1).Color = [1, 0, 0];  lred(1).MarkerFaceColor = [1, 0, 0]; lred(1).DisplayName = 'Red'; % properties of dot data
+                lred(1).Color = [1, 0, 0];  lred(1).MarkerFaceColor = [1, 0, 0]; lred(1).DisplayName = ['Red, mean ', num2str(mean(Pred)), ', std ', num2str(std(Pred))]; % properties of dot data
                 lred(2).Color = [1, 0, 0]; lred(2).DisplayName = ['\mu = ', num2str(fred.b1), ', \sigma = ', num2str(fred.c1/sqrt(2))];  % properties of fit line
                 bred.FaceAlpha = 0.5; bred.DisplayName = 'Red'; bred.BarWidth = 0.8;
         
                 lbluered = plot(fbluered, centers_bluered(nbluered~=0), nbluered(nbluered~=0), 'o');  % return the line object
                 bbluered = bar(centers_bluered(nbluered~=0), nbluered(nbluered~=0), 1, 'FaceColor', [0, 0, 0]);
-                lbluered(1).Color = [0, 0, 0]; lbluered(1).MarkerFaceColor = [0, 0, 0]; lbluered(1).DisplayName = 'Blue and red'; % properties of dot data
+                lbluered(1).Color = [0, 0, 0]; lbluered(1).MarkerFaceColor = [0, 0, 0]; lbluered(1).DisplayName = ['Blue and red, mean ', num2str(mean(Pbluered)), ', std ', num2str(std(Pbluered))]; % properties of dot data
                 lbluered(2).Color = [0, 0, 0]; lbluered(2).DisplayName = ['\mu = ', num2str(fbluered.b1), ', \sigma = ', num2str(fbluered.c1/sqrt(2))];  % properties of fit line
                 bbluered.FaceAlpha = 0.5;  bbluered.DisplayName = 'Blue and red'; bbluered.BarWidth = 0.6;
                 hold off; xticks(edges); 
