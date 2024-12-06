@@ -260,6 +260,9 @@ for denoise = [true]  % [true, false] for both plots
     % Initialize some values for plotting below
     pturns = {pturn_all, pturn_001, pturn_011, pturn_101, pturn_111};
     prefixes = {'all_', '001_', '011_', '101_', '111_'};
+%     pturns = {[pturn_001; pturn_011], [pturn_001; pturn_101], [pturn_101; pturn_111], [pturn_011; pturn_111]};
+%     prefixes = {'0X1_', 'X01_', '1X1_', 'X11_'};  % X = 0 or 1
+    figure;
     for i = 1 : length(pturns)
         pturn = pturns{i};  % what pturn to use, could be pturn_111 or pturn_all, etc.
         prefix = prefixes{i};  % use '001_' or 'all_' etc
