@@ -26,9 +26,13 @@ end
 
 % create pturn_all in order of categories and save in data.mat
 % pturn_all = [];  % nlarva-by-15 array, 3s bins
-stim_color = {'blue1', 'blue2', 'blue3'};  % descripiton of the t_stim_start
-pturn_000 = []; pturn_001 = []; pturn_010 = []; pturn_011 = [];
-pturn_100 = []; pturn_101 = []; pturn_110 = []; pturn_111 = [];
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+ntype = 2 ^ (length(stim_color));  % int, -1 in the power if exclude dark in the end ------------------
+pturn_type = cell(1, ntype);  % 1-by-ntype cell, 1-indexed, each element is an array
+trackNum_type = cell(1, ntype);  % the info of each type is saved in one cell of the *_type cell
+expt_type = cell(1, ntype);
+larva_type = cell(1, ntype);
+response_type = cell(1, ntype);
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
     load(savename, 'larvae');
@@ -38,25 +42,22 @@ for j = 1 : length(figlocation_list)
             pturn = getfield(larvae, ['larva', num2str(i)], 'pturn');
             % pturn_all = [pturn_all; pturn.blue, pturn.red pturn.bluered];
             % to load pturn in order of response
-            response = [getfield(larvae, ['larva', num2str(i)], 'response', stim_color{1}), getfield(larvae, ['larva', num2str(i)], 'response', stim_color{2}), getfield(larvae, ['larva', num2str(i)], 'response', stim_color{3})];
-            switch response
-                case '000'
-                    pturn_000 = [pturn_000; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '001'
-                    pturn_001 = [pturn_001; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '010'
-                    pturn_010 = [pturn_010; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '011'
-                    pturn_011 = [pturn_011; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '100'
-                    pturn_100 = [pturn_100; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '101'
-                    pturn_101 = [pturn_101; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '110'
-                    pturn_110 = [pturn_110; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-                case '111'
-                    pturn_111 = [pturn_111; pturn.(stim_color{1}), pturn.(stim_color{2}), pturn.(stim_color{3})];
-            end  % end switch
+            larva_index = ['larva', num2str(i)];
+            response = '';  % e.g. '001001'
+            for s = 1 : length(stim_color)  % -1 if exclude the last stim_color, 'dark' -------------
+                response = [response, getfield(larvae, ['larva', num2str(i)], 'response', stim_color{s})];
+            end
+            typeth = bin2dec(response) + 1;  % positive int
+            pturn_temp = [];
+            for s = 1 : length(stim_color)  % put pturn together
+                pturn_temp = [pturn_temp, getfield(pturn, stim_color{s})];
+            end
+            pturn_type{typeth} = [pturn_type{typeth};  pturn_temp];
+            trackNum_type{typeth} = [trackNum_type{typeth}; getfield(larvae, ['larva', num2str(i)], 'trackNum')];
+            expt_type{typeth} = [expt_type{typeth}; getfield(larvae, ['larva', num2str(i)], 'expt_info')];
+            larva_type{typeth} = [larva_type{typeth}; i];
+            response_type{typeth} = [response_type{typeth}; response];
+
         end  % end if valid larvae
     end  % end looping each larva in one experiment
 end  % end loop each experiment
