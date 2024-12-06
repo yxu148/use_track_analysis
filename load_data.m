@@ -15,8 +15,8 @@ t_stim_end = [600, 1200, 1800];
 stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 frame_rate = 20;  % number of frames per second
 % To save longer tracks in t
-nperiods = 79;  % select tracks that have [nperiods, Nperiods] length, minimum 23 min
-Nperiods = 121;  %expt time is 20 min, i.e. 20s periods at most for a 60 cycles, use 61 to include 60.001
+latest_start = 120;  % seconds, select the tracks that start earlier than latest_start time.
+earliest_end = 1680;  % seconds, select the tracks that end later than earliest_end time.
 
 
 
@@ -79,7 +79,7 @@ disp(['Time for one frame is ', num2str(eset.expt.elapsedTime(2)), ' s']);
 Ntracks = size(eset.expt(1).track);  % 1-by-Number_of_Tracks ( number of maggots)
 if download
     figure;
-    histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), 0:10:(Nperiods+1));  % round 60.001 to 60
+    histogram(round(eset.expt.elapsedTime([eset.expt.track.npts])/tperiod), 0:20:(t_stim_end(end)/tperiod+1));
     xlabel('Number of Periods'); ylabel('Number of Tracks'); title(['Histogram of The Length of All ', num2str(length(eset.expt(1).track)), ' Tracks']);
     pause;
     savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], '\track_length');
@@ -118,9 +118,9 @@ if download
 end
 
 
+% select tracks that start earlier than latest_start(s) and end later than earliest_end (s)
 t = eset.expt.track;
-minNpoints = nperiods * tperiod / (eset.expt.elapsedTime(end)/length(eset.expt.elapsedTime));
-t = t([t.npts] >= minNpoints);  % select tracks longer than requirement
+t = t(([t.startFrame] <= latest_start * frame_rate) & ([t.endFrame] >= earliest_end * frame_rate));
 disp([num2str(length(t)), ' long tracks out of ', num2str(length(eset.expt(1).track)), ' tracks, from ', num2str(max(ntracks_frame)), ' moving maggots']);
 
 
