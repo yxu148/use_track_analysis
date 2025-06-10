@@ -413,6 +413,29 @@ unlabeled_time = (t(j).npts - length(t_running) - length(t_turning)) / frame_rat
 
 %% Speed
 
+% spine length of larvae
+j = 1;  % track number
+% t = eset.expt.track(j);
+t = esets.eset1.expt(1).track(j);
+spineL = median(t.dq.spineLength);  % cm
+
+
+
+j = 8;  % track number
+v_frame = eset.expt.track(j).dq.speed * 60;  % cm/min
+t_frame = eset.expt.track(j).dq.eti;  % interpolated time (s) for each frame of track j, 1-by-(number of the track's frame) 
+turnStartTime =  eset.expt.track(j).getSubFieldDQ('reorientation', 'eti', 'indsExpression', '[track.reorientation.numHS] >= 1', 'position', 'start');  % time (s) not in period
+figure;
+plot(t_frame, v_frame); hold on;
+plot(t_frame, medfilt1(v_frame, 301));  % 1-D median filter with 301-order, median of data in 301 frames window.
+plot(turnStartTime, 0.3, 'ok'); hold off; 
+legend('Speed', 'filtered', 'Turn start')
+xlabel('Time (s)'); ylabel('Speed (cm/min)'); title(['Track ', num2str(j)])
+savename = strcat(basedir,['\results', d(x).name(end-16:end-4)], ['\v_t_track', num2str(j)]);
+savefig(gcf, savename); 
+
+
+
 % mean speed of each run verses time in experiment of single larvae
 j = 6;  % track number
 % t = eset.expt.track;
