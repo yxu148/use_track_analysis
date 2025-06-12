@@ -49,7 +49,8 @@ xlabel('The number-th of Run'); ylabel('Mean speed (cm/min)');
 
 %%%%%%%%%%%%%%%           turn probability per larva            %%%%%%%%%%%%%%%%%%
 figure;
-reorientation_rate = eset.makeReorientationHistogram('led2Val_toff', 0:0.1:20);  % per minute ?????????????????????????
+% only plot the info between 0s and 600 s of the experiment
+reorientation_rate = eset.makeReorientationHistogram('led2Val_toff', 0:0.1:20, 'timerange', [0, 600]);  % per minute
 plot(reorientation_rate); xlabel('led2Val\_toff'); ylabel('Reorientation Rate (per min)');
 savename = strcat(basedir,'\results', '\reorientation_rate_power');
 savefig(gcf,savename);
