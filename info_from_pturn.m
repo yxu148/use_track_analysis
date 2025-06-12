@@ -119,6 +119,13 @@ basedir = basedir_cell{1};
 savename = strcat(basedir, '\results_new', '\data.mat');  % there should be only 1 basedir in basedir_cell
 load(savename);
 
+% proportion-lize pturn_all, so that each 5-size pturn is a probability distribution (sum is 1)
+for row = 1 : size(pturn_all, 1)
+    for s = 1 : length(stim_color)
+        pturn_all(row, s*5-4:s*5) = proplize(pturn_all(row, s*5-4:s*5));
+    end
+end
+
 % order types by whose numbers of larvae in descending order
 name_tyep = dec2bin(0:7);  % 1-indexed ---------
 nlarva_type = [];  % number of larvae belonging to every type in order of dec2bin(0:63)
