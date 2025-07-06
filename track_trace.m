@@ -1,11 +1,11 @@
 % Plot all tracks moving together with the raw video (.avi),
 % adapted from Isabel
 
-basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Or42a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3_#T_Bl_Sq_2to7P_15_1_3_';  % ---------------------------
+basedir = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data_new\variability_new_try_extracted\Or42a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3_#T_Bl_Sq_2to7P_15_1_3_';  % ---------------------------
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 % reload experiment from mat files, called experiment set (eset), belong to @ExperimentSet object
 disp('Loading data...');
-x = [5];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
+x = [1];  % load the x-th set of data to analyze, x is a list [1], or [1, 2, 5], or delete (x) below for all--------------------
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(x).name}));  % d(x) or d
 % load .mat files containing track information into eset
 disp('Loading tracks ...');
@@ -20,18 +20,18 @@ for k = 1 : length(x)
     eset.expt(1).track = s;  % save the track to x(k) or 1
 end
 eset.executeTrackFunction('segmentTrack')
-
+mkdir(fullfile(basedir, ['results', d(x).name(end-16:end-4)])); 
 results_dir = strcat(basedir,['\results', d(x).name(end-16:end-4)]);
 
 
-savename = fullfile(results_dir, 'all_tracks_trace_label.avi');
+savename = fullfile(results_dir, 'collision3_tracks_trace_label.avi');
 videoObject = VideoWriter(savename);
 videoObject.FrameRate = 20;  % adjust as desired
 open(videoObject);
 
 
 %% 2) Figure / Axes Setup
-fig = figure('Units','pixels','Position',[100,100,875,656],'Color','w');
+fig = figure('Units','pixels','Position',[0,0,1980,1980],'Color','w');
 ax  = axes('Parent',fig,'Color','k','XColor','k','YColor','k');
 hold(ax,'on');
 axis equal; 
@@ -39,8 +39,8 @@ set(ax,'YDir','normal');
 
 
 % Suppose we want to plot a 25×25 cm region
-xlim_plot = [0, 28];  % 'auto'; [0, 28];  [12, 15]; % in cm
-ylim_plot = [0, 28];  % 'auto'; % [0, 28]; [10, 13]; 
+xlim_plot = [6, 9];  % 'auto'; [0, 28];  [12, 15]; % in cm
+ylim_plot = [2, 5];  % 'auto'; % [0, 28]; [10, 13]; 
 
 xlim(ax,xlim_plot);
 ylim(ax,ylim_plot);
@@ -50,9 +50,9 @@ ylabel(ax,'Y (cm)','Color','k');
 
 
 %% 3) Frame Range & Skip
-frameStart  = 1;       % e.g. 1
-frameEnd    = 48000;    % e.g. 9000
-skipFrames  = 60;      % e.g. only show every 20th frame
+frameStart  = 25500;       % e.g. 1
+frameEnd    = 27000;    % e.g. 9000, 48000
+skipFrames  =10;      % e.g. only show every 20th frame, 1 for not skipping
 max_history = 1200;  % frames, maximum passing 200 frames of track will show
 
 %% 4) Data / Track Info
@@ -78,7 +78,7 @@ end
 % Optionally specify a background color or multiple backgrounds, e.g.:
 % colorMap = distinguishable_colors(num_tracks, {'w','k'}); 
 % for ensuring colors differ from white or black
-colorMap = distinguishable_colors(num_tracks,{'k'}); %so none are too close to black. can change to {'w','k'} to include white also
+colorMap = distinguishable_colors(num_tracks,[0 0 0.5; 0 0 0]); %so none are too close to black. can change to {'w','k'} to include white also
 for i = 1:num_tracks
     hsvVal = rgb2hsv(colorMap(i,:));
     if hsvVal(2) < 0.1
@@ -155,7 +155,7 @@ for frameIdx = frameStart : skipFrames : frameEnd
         % (B4) Label with track #, in track color
         text(ax, xy_s(1,drawIdx), xy_s(2,drawIdx),...
             sprintf('%d', tIdx),...
-            'Color', cTrack,'FontSize',8,'FontWeight','bold',...
+            'Color', cTrack,'FontSize',18,'FontWeight','bold',...
             'HorizontalAlignment','left','VerticalAlignment','bottom');
     end  % loop for each track and draw 
 

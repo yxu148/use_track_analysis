@@ -1,15 +1,15 @@
 % @Yiming
 
 warning backtrace off
-startdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary'; % Start folder, contains data from experiments, and *check*.png ---------------
+startdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data_new\temporary_far'; % Start folder, contains data from experiments, and *check*.png ---------------
 % startdir2 = ...
 
-outputdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary_extracted'; % Extracted folder, contains data after extraction, must exist ---------------
+outputdir1 = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data_new\temporary_far_extracted'; % Extracted folder, contains data after extraction, must exist ---------------
 
 
 % start a log file to record
 logname = "processBIN" + datestr(now, 'yyyy-mm-dd')+ ".txt";  % doesn't exist before diary()
-logpath = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\temporary_process_logs';  % this folder must exist ---------------
+logpath = 'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data_new\temporary_far_process_logs';  % this folder must exist ---------------
 pathname = fullfile(logpath, logname);
 diary(pathname);
 disp(datestr(now));
@@ -73,8 +73,10 @@ for i = 1:length(startdirs)
    % processingOptions = {'trimrectpixels', [10 10 2582 1934]}; 
    % CHANGED 2/7/2015 by MHG to not trim tracks
 %     processingOptions = {'trimrect', [], 'trimrectpixels',[],'buffer', [],'ccInSupDataDir', true}; %no trimming!
-% Default 'frameDiff' is 7, default 'maxDist' is 0.1 (cm)---------
-    processingOptions = {'trimrect', [], 'trimrectpixels',[],'buffer', [],'ccInSupDataDir', true, 'frameDiff', 1000, 'maxDist', 0.3};
+% Default 'frameDiff' is 7, default 'maxDist' is 0.1 (cm), some stitch is not good either, name is _new
+% I have tried 'frameDiff', 1000, 'maxDist', 0.3, not good, not all stitches are good, by default
+% try 'maxDist', 0.05 (cm), 'frameDiff', 3, name is _try
+    processingOptions = {'trimrect', [], 'trimrectpixels',[],'buffer', [],'ccInSupDataDir', true, 'frameDiff', 3, 'maxDist', 0.05};
     for j = 1:length(dstdirs)
 %         if (any(strcmpi(dstdirs{j}, processingProblems)))
 %             warning ('ap2:pp', [dstdirs{j} ' is marked as a problem -- skipping']);

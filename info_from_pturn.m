@@ -2,10 +2,10 @@
 
 %% create pturn matrix from the structure larvae
 basedir_cell = {
-    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Gr21a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3#T_Bl_Sq_2to7P_15_1_3'
+    'G:\AS-Filer\PHY\mmihovil\Shared\Yiming Xu\data\variability_new_extracted\Or42a@Chrimson(3)\T_Re_Sq_219to436P_15_2_3_#T_Bl_Sq_2to7P_15_1_3_'
     };
 x_cell = {
-    1:21
+    1:22
 %     [25, 26, 27, 28, 29, 30, 31, 32, 33, 34]  % load the x-th set of data from the first basedir to analyze
     };
 
@@ -17,7 +17,7 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     basedir = basedir_cell{folder_index};
     x = x_cell{folder_index};
     d = dir(fullfile(basedir, 'matfiles', '*.mat'));
-    mkdir(fullfile(basedir, 'results_new'));  % create a overall results folder to contain general data
+    mkdir(fullfile(basedir, 'results'));  % create a overall results folder to contain general data
     for k = 1 : length(x)  % loop for each expt in the eset
         j = j + 1;
         figlocation_list{j} = fullfile(basedir, ['results', d(x(k)).name(end-16:end-4)]);
@@ -26,12 +26,13 @@ end
 
 % create pturn_all in order of categories and save in data.mat
 % pturn_all = [];  % nlarva-by-15 array, 3s bins
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-ntype = 2 ^ (length(stim_color));  % int, -1 in the power if exclude dark in the end ------------------
+stim_color = {'blue', 'red', 'bluered', 'dark'};  % descripiton of the t_stim_start
+ntype = 2 ^ (length(stim_color) - 1);  % int, -1 in the power if exclude dark in the end ------------------
 pturn_type = cell(1, ntype);  % 1-by-ntype cell, 1-indexed, each element is an array
+v_init_type = cell(1, ntype);
 trackNum_type = cell(1, ntype);  % the info of each type is saved in one cell of the *_type cell
 expt_type = cell(1, ntype);
-larva_type = cell(1, ntype);
+larva_type = cell(1, ntype);  % the larva index in expt
 response_type = cell(1, ntype);
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
@@ -40,19 +41,25 @@ for j = 1 : length(figlocation_list)
         if getfield(larvae, ['larva', num2str(i)], 'valid')
 %         if 1
             pturn = getfield(larvae, ['larva', num2str(i)], 'pturn');
+            v_init = getfield(larvae, ['larva', num2str(i)], 'init_speed');
             % pturn_all = [pturn_all; pturn.blue, pturn.red pturn.bluered];
             % to load pturn in order of response
             larva_index = ['larva', num2str(i)];
-            response = '';  % e.g. '001001'
-            for s = 1 : length(stim_color)  % -1 if exclude the last stim_color, 'dark' -------------
+            response = '';  % e.g. '001001', initialize for every larva
+            for s = 1 : length(stim_color) - 1  % -1 if exclude the last stim_color, 'dark' -------------
                 response = [response, getfield(larvae, ['larva', num2str(i)], 'response', stim_color{s})];
             end
             typeth = bin2dec(response) + 1;  % positive int
             pturn_temp = [];
-            for s = 1 : length(stim_color)  % put pturn together
+            v_init_temp = [];
+            for s = 1 : length(stim_color)  % put pturn together, including 'dark' if there is
                 pturn_temp = [pturn_temp, getfield(pturn, stim_color{s})];
             end
+            for s = 1 : length(stim_color)  % -1 to exclude the last stim_color, 'dark'
+                v_init_temp = [v_init_temp, getfield(v_init, stim_color{s})];
+            end
             pturn_type{typeth} = [pturn_type{typeth};  pturn_temp];
+            v_init_type{typeth} = [v_init_type{typeth};  v_init_temp];
             trackNum_type{typeth} = [trackNum_type{typeth}; getfield(larvae, ['larva', num2str(i)], 'trackNum')];
             expt_type{typeth} = [expt_type{typeth}; getfield(larvae, ['larva', num2str(i)], 'expt_info')];
             larva_type{typeth} = [larva_type{typeth}; i];
@@ -68,9 +75,10 @@ end  % end loop each experiment
 % 
 
 % put array from different cell together to one array
-[pturn_all, trackNum_all, expt_all, larva_all, response_all] = deal([]);  % all variables have the same defination
+[pturn_all, v_init_all, trackNum_all, expt_all, larva_all, response_all] = deal([]);  % all variables have the same defination
 for s = 1 : length(pturn_type)
     pturn_all = [pturn_all; pturn_type{s}];
+    v_init_all = [v_init_all; v_init_type{s}];
     trackNum_all = [trackNum_all; trackNum_type{s}];
     expt_all = [expt_all; expt_type{s}];
     larva_all = [larva_all; larva_type{s}];
@@ -79,16 +87,17 @@ end
 
 larva2track = table([1 : length(pturn_all)].', larva_all, trackNum_all, response_all, expt_all);
 
-savename = strcat(basedir_cell{1}, '\results_new', '\data.mat');  % there should be only 1 basedir in basedir_cell
+savename = strcat(basedir_cell{1}, '\results', '\data.mat');  % there should be only 1 basedir in basedir_cell
 if isfile(savename)
     save(savename, 'pturn_all', 'pturn_type', '-append');
     save(savename, 'larva2track', '-append')
+    save(savename, 'v_init_all', '-append')
 else
     save(savename, 'pturn_all', 'pturn_type')
     save(savename, 'larva2track')
 end
-writematrix(pturn_all, strcat(basedir_cell{1}, '\results_new', '\pturn.xlsx'));
-writetable(larva2track, strcat(basedir_cell{1}, '\results_new', '\larva2track.xlsx'))
+writematrix(pturn_all, strcat(basedir_cell{1}, '\results', '\pturn+dark.xlsx'));
+writetable(larva2track, strcat(basedir_cell{1}, '\results', '\larva2track.xlsx'))
 % writematrix(pturn_all, 'pturn.csv');
 
 % % remove certain fields from a structure
@@ -116,7 +125,7 @@ writetable(larva2track, strcat(basedir_cell{1}, '\results_new', '\larva2track.xl
 
 %% Plot pturn from data.mat ===================================================
 basedir = basedir_cell{1};
-savename = strcat(basedir, '\results_new', '\data.mat');  % there should be only 1 basedir in basedir_cell
+savename = strcat(basedir, '\results', '\data.mat');  % there should be only 1 basedir in basedir_cell
 load(savename);
 
 % proportion-lize pturn_all, so that each 5-size pturn is a probability distribution (sum is 1)
@@ -134,14 +143,15 @@ for s = 1 : length(pturn_type)
 end
 [nlarva_type_des, sortIdx] = sort(nlarva_type, 'descend');
 table_response_nlarva_des = table(name_tyep(sortIdx, :), nlarva_type_des.');
-writetable(table_response_nlarva_des, strcat(basedir_cell{1}, '\results_new', '\response_nlarva_des.xlsx'))
+writetable(table_response_nlarva_des, strcat(basedir_cell{1}, '\results', '\response_nlarva_des.xlsx'))
 
-denoise =false;
+denoise = false;
 % Initialize some values for plotting below
 pturn = pturn_all;  % what pturn to use, could be pturn_111 or pturn_all, etc.
 prefix = 'all_';  % use '001_' or 'all_' etc
 if denoise  % the p of first bin minuses the average of rest bins
-    Pbaseline = (pturn(:, 5) + pturn(:, 10) + pturn(:, 15)) / 3;
+%     Pbaseline = (pturn(:, 5) + pturn(:, 10) + pturn(:, 15)) / 3;
+    Pbaseline = mean(pturn(:, end-4:end), 2);
     Pblue = pturn(:,1) - Pbaseline;
     Pred = pturn(:,6) - Pbaseline;
     Pbluered = pturn(:,11) - Pbaseline;
@@ -191,15 +201,24 @@ end
 name_type_cell(nlarva_type<5) = {'\_'};
 
 % plot the matrix pturn_all
+stim_color = {'blue', 'red', 'bluered'};  %, 'dark'
 figure;
-imagesc(pturn_all, [0, 1]); 
-xline([0.5, 5.5, 10.5], 'w', stim_color); yline(boundary_type + 0.5, 'w', name_type_cell);
+imagesc(pturn_all(:, 1:15), [0, 1]); 
+xline([0.5, 5.5, 10.5], 'w', stim_color); yline(boundary_type + 0.5, 'w', name_type_cell);  %---- add 15.5 if include dark, name_type_cell, stim_color
 ylabel('Index of larva'); set(gca,'XTick',[])
-colormap(parula(4));  % get the downsampled version of parula colormap that has 4 colors
+% cmap = makeColormap([0 0 0.5; 0 0 1; 0 0.5 0; 0 1 0; 0.5 0.5 0; 1 1 0], [4; 0; 2; 0; 4]);
+% cmap = makeColormap([0 0 204; 153 204 255; 0 153 76; 0 204 102; 255 128 0; 255 255 204]/255, [4; 0; 2; 0; 4]);
+colormap(parula);  % colormap(parula(4)); get the downsampled version of parula colormap that has 4 colors. Empty for gradient.
 cbar = colorbar; cbar.Label.String = 'Turn possibility within 3-s bins';
-cbar.Ticks = 0:0.25:1;
-mkdir(fullfile(basedir, '\results_new', 'results_fig'));
-savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_discrete');
+cbar.Ticks = 0:0.2:1;  % tick every 0.25
+mkdir(fullfile(basedir, '\results', 'results_fig'));
+savename = strcat(basedir, '\results', '\results_fig', '\pturn_all');  % '\pturn_all_discrete+dark'
+savefig(gcf, savename);
+
+% plot the matrix v_init_all
+figure; imagesc(v_init_all); colormap(); cbar = colorbar; cbar.Label.String = 'Mean speed of 1s before stimulation on (cm/min)';
+set(gca,'XTick', 1:4); set(gca,'XTickLabel', stim_color); pbaspect([1, 4, 1]);  % ratio of axis x, y, z is [1, 4, 1]
+savename = strcat(basedir, '\results', '\results_fig', '\init_speed_all');
 savefig(gcf, savename);
 
 % colormap of pturn of both-blue, both-red
@@ -218,8 +237,16 @@ cbar = colorbar; cbar.Label.String = 'Turn possibility relative change';  % to s
 cbar.Limits = [zmin, 1];  % only show the colorbar from min to 1
 cbar.Ticks = [0:0.25:1];
 set(gcf, 'Position', gcf().Position .* [1, 1, 0.5, 1])  % shink the width by half
-savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each_relalative_discrete');
+savename = strcat(basedir, '\results', '\results_fig', '\pturn_all_both-each_relalative_discrete');
 savefig(gcf, savename);
+
+% hist of pturn of both - pturn of each
+figure;
+histogram(Pbluered-Pblue)
+xlabel('Pbluered - Pblue'); ylabel('Larvae Count')
+savename = strcat(basedir, '\results', '\results_fig', '\hist_pboth-pblue');
+savefig(gcf, savename);
+
 
 % colormap of pturn of (both-blue)/both, (both-red)/both
 figure;
@@ -229,11 +256,50 @@ xline([0.5, 1.5], 'w', notes); yline(boundary_type + 0.5, 'w', name_type_cell);
 ylabel('Index of larva'); set(gca,'XTick',[])
 cbar = colorbar; cbar.Label.String = 'Turn possibility relative change';
 set(gcf, 'Position', gcf().Position .* [1, 1, 0.5, 1])  % shink the width by half
-savename = strcat(basedir, '\results_new', '\results_fig', '\pturn_all_both-each_relalative');
+savename = strcat(basedir, '\results', '\results_fig', '\pturn_all_both-each_relalative');
 savefig(gcf, savename);
 
+% hist of pturn in dark and fit
+pdark = pturn_all(:, 16:20);
+pdark = mean(pdark, 2);  % average each row, nlarvae-by-1
+pd = fitdist(pdark, 'Normal');  mu = pd.mu; sigma = pd.sigma;% normal distribution
+figure;
+h = histogram(pdark, 7); hold on;
+binWidth = h.BinWidth; nSamples = length(pdark);
+x = linspace(min(pdark), max(pdark), 100);
+y = nSamples * binWidth * normpdf(x, mu, sigma);
+plot(x, y, 'LineWidth', 2); hold off;
+legend('Data Histogram', sprintf('Gaussian Fit (\\mu = %.2f, \\sigma = %.2f)', mu, sigma)); %, 'Location', 'eastoutside')
+xlabel('Average pturn in dark for each larva'); ylabel('Count');
+savename = strcat(basedir, '\results', '\results_fig', '\hist_pdark_fit');
+savefig(gcf, savename);
+
+% study the background activity, which one to choose, p(end) or p_dark
+Pturn_dark = mean(pturn_all(:, end-4:end), 2);  % mean of pturn in dark (the last 5 values here), nlarva-by-1
+Pbaseline = (pturn_all(:, 5) + pturn_all(:, 10) + pturn_all(:, 15)) / 3;
+Pbaseline = [Pbaseline, pturn_all(:, 5)];
+Pbaseline = [Pbaseline, pturn_all(:, 10)];
+Pbaseline = [Pbaseline, pturn_all(:, 15)];
+Pbaseline = [Pbaseline, (pturn_all(:, 2) + pturn_all(:, 7) + pturn_all(:, 12)) / 3;];
+figure; hold on;
+for f = 1:size(Pbaseline, 2)
+    subplot(2, 3, f); hold on;
+    plot(Pturn_dark, Pbaseline(:, f), '.'); axis equal; 
+    plot([0, 1], [0, 1], 'DisplayName', 'y = x');
+    xlim([0, max([Pturn_dark, Pbaseline], [], 'all')]); ylim([0, max([Pturn_dark, Pbaseline], [], 'all')]);
+    xlabel('Pturn in dark'); ylabel(num2str(f)); hold off;
+end
+figure;
+histogram(Pturn_dark);
+xlabel('Avereage Pturn in dark for each larva'); ylabel('Count')
+Pturn_dark_bins = pturn_all(:, end-4:end);
+Pturn_dark_bins = Pturn_dark_bins(:);
+histogram(Pturn_dark_bins, 10);
+xlabel('Pturn in dark for each larva of each 3-s bin'); ylabel('Count')
+
+
 % study the threshold of deciding if the larva turns
-criteria = 'pturn12-pturn_rest';
+criteria = 'pturn1-pturn345';
 switch criteria
     case 'pturn1-pturn_rest'
         criteria_blue = pturn_all(:, 1) - mean(pturn_all(:, 2:5), 2);
@@ -257,7 +323,7 @@ hold off;
 switch criteria
     case 'pturn1-pturn_rest'
         xlabel('pturn(0<t<3s) - p(turn(3<t<15s)', 'FontSize', 20); ylabel('Count', 'FontSize', 20);
-        savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\turn_criteria_1');
+        savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\turn_criteria_1');
         savefig(gcf, savename);
     case 'pturn12-pturn_rest'
         xlabel('pturn(0<t<6s) - p(turn(6<t<15s)', 'FontSize', 20); ylabel('Count', 'FontSize', 20);
@@ -285,7 +351,7 @@ colormap parula;
 cbar.Label.String = 'Pturn during the first 3 s of both blue and red';
 if denoise
     savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb_pr_denoise']);
-    xlim([0, 0.8]); ylim([0, 0.8]); savefig(gcf, savename)
+    xlim([-0.1, 0.8]); ylim([-0.1, 0.8]); title('Denoise'); savefig(gcf, savename)
 else
     savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb_pr']);
     xlim([0, 0.8]); ylim([0, 0.8]); savefig(gcf, savename)
@@ -300,13 +366,16 @@ scatter(x, y, sz, 'filled', 'DisplayName', 'Maggots')
 lfit = lsline;  % least-squares line
 lfit.DisplayName = ['y = ', num2str(diff(lfit.YData) / diff(lfit.XData)), 'x + ', num2str(lfit.YData(1))];
 hold on; plot([0, 1], [0, 1], 'DisplayName', 'y = x'); hold off;
-axis equal; xlim([0,max(x) + 0.2]); ylim([0, max(y) + 0.2]);
+axis equal; xlim([0,max(max(x), 1) + 0.2]); ylim([0, 1]);
 xlabel('Pturn during the first 3 s of blue plus that of red'); ylabel('Pturn during the first 3 s of both blue and red');
 legend();
 if denoise
-    savefig(gcf, [prefix, 'pbluered--pb+pr_denoise'])
+    title('Denoise');
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb+pr_denoise']);
+    savefig(gcf, savename)
 else
-    savefig(gcf, [prefix, 'pbluered--pb+pr'])
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, 'pbluered-pb+pr']);
+    savefig(gcf, savename)
 end
 
 
@@ -318,10 +387,12 @@ z = Pbluered;
 plot(sf, [x, y], z); axis equal;
 xlabel('Pturn_{blue}'); ylabel('Pturn_{red}'); zlabel('Pturn_{blue+red}');
 title(['Pturn_{blue + red} = ', num2str(sf.p00), ' + ', num2str(sf.p10), ' * Pturn_{blue} ', ' + ', num2str(sf.p01), ' * Pturn_{red} ']);
-if denoise    
-    savefig(gcf, [prefix, '3d_plane_fit_denoise'])
+if denoise
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, '3d_plane_fit_denoise']);
+    savefig(gcf, savename)
 else
-    savefig(gcf, [prefix, '3d_plane_fit'])
+    savename = strcat(basedir, '\results', '\results_fig', ['\', prefix, '3d_plane_fit']);
+    savefig(gcf, savename)
 end
 
 
@@ -335,13 +406,13 @@ xlabel('p(turn|blue+red)[0, 3s]'); ylabel('Predicted by Bayes Theorem');
 %%  histogram of some pturn
 % mean(pturn_all(:, 3:5), 'all')
 % std(pturn_all(:, 3:5), 1, "all")
-download = false;
+download = true;
 check_off = false;  % check the pturn when light is off, multiple columns.
 positive_pturn = false;  % if force negative pturn to be zero
-for denoise = [false]  % [true, false] for both plots
+for denoise = [true]  % [true, false] for both plots
     % Initialize some values for plotting below
-    pturns = {pturn_all, pturn_001, pturn_011, pturn_101, pturn_111};
-    prefixes = {'all_', '001_', '011_', '101_', '111_'};
+    pturns = {pturn_all, pturn_type{4}, pturn_type{8}};
+    prefixes = {'all_', '011_', '111_'};
 %     pturns = {[pturn_001; pturn_011], [pturn_001; pturn_101], [pturn_101; pturn_111], [pturn_011; pturn_111]};
 %     prefixes = {'0X1_', 'X01_', '1X1_', 'X11_'};  % X = 0 or 1
     figure;
@@ -349,7 +420,7 @@ for denoise = [false]  % [true, false] for both plots
         pturn = pturns{i};  % what pturn to use, could be pturn_111 or pturn_all, etc.
         prefix = prefixes{i};  % use '001_' or 'all_' etc
         if denoise  % the p of first bin minuses the average of rest bins
-            Pbaseline = mean(pturn(:, 3:5) + pturn(:, 8:10) + pturn(:, 13:15), 2) / 3;
+            Pbaseline = mean(pturn(:, end-4:end), 2);
             Pblue = pturn(:,1) - Pbaseline;
             Pred = pturn(:,6) - Pbaseline;
             Pbluered = pturn(:,11) - Pbaseline;
@@ -401,7 +472,7 @@ for denoise = [false]  % [true, false] for both plots
                 fred = fit(centers_red(nred~=0).', nred(nred~=0).', 'gauss1');
                 fbluered = fit(centers_bluered(nbluered~=0).', nbluered(nbluered~=0).', 'gauss1');
                 % to plot with Gaussian fit
-                subplot(5, 1, i); hold on;
+                subplot(length(pturns), 1, i); hold on;
                 lblue = plot(fblue, centers_blue(nblue~=0), nblue(nblue~=0), 'o');  % return the line objects, raw data and fitted line
                 bblue = bar(centers_blue(nblue~=0), nblue(nblue~=0), 1, 'FaceColor', [0, 0, 1]);
                 lblue(1).Color = [0, 0, 1]; lblue(1).MarkerFaceColor = [0, 0, 1]; lblue(1).DisplayName = ['Blue, mean ', num2str(mean(Pblue)), ', std ', num2str(std(Pblue))]; % properties of dot data
@@ -445,24 +516,26 @@ for denoise = [false]  % [true, false] for both plots
                 xlabel('Average Nturns for a larva during the first 3 s of stimulation high'); ylabel('Proportion of maggots');
         end  % end swith fit function
         title([prefix(1:end-1), ' ', fit_func]);
-        if denoise
-            title([prefix(1:end-1), ' ', fit_func, ' Denoise']);
-            if download
-                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\', [prefix, 'hist_pturn_denoise_', fit_func]);
-                savefig(gcf, savename); close;
-            end
-        else
-            if download
-                savename = strcat(basedir_cell{1}, '\results_new', '\results_fig', '\', [prefix, 'hist_pturn_', fit_func, '_count']);
-                savefig(gcf, savename); close
-            end
-        end
 
     end  % end loop for each stimulation type
-end  % end loop for denoise
-%%
+    if denoise
+        title([prefix(1:end-1), ' ', fit_func, ' Denoise']);
+        if download
+            pause;
+            savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', ['hist_pturn_denoise_', fit_func, '_count']);
+            savefig(gcf, savename); close;
+        end
+    else
+        if download
+            pause;
+            savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', ['hist_pturn_', fit_func, '_count']);
+            savefig(gcf, savename); close
+        end
+    end  % end if denoise
 
-% histogram of pturn for different light with polynomial fit
+end  % end loop for denoise
+
+%% histogram of pturn for different light with polynomial fit
 % determine the edges to plot
 edge_min = min([Pblue; Pred; Pbluered]);
 edge_min = floor(edge_min * 10) / 10;  % find it's left boundary with 1 decimal
@@ -497,7 +570,7 @@ if denoise
 else
     savefig(gcf, [prefix, 'hist_pturn_stim_gaussian_fit']);
 end
-
+%% Try different scatters of pturn
 
 figure;  % Superlinear if p(blue+red) > pblue + pred, vice verse sublinear
 x = Pblue;  % p( 0<t<3s, blue)
@@ -505,7 +578,7 @@ y = Pred;
 sz = 30;  % size of dots in pixels
 % c = 1 - pturn_hist_all(:, 13) * [1 1 1];  % the larger p, the smaller c, the darker
 c = (x + y) >= Pbluered;
-scatter(x, y, sz, c, 'filled')
+scatter(x, y, sz, c, 'filled'); hold on; 
 axis equal;
 xlabel('Pturn during the first 3 s of blue'); ylabel('Pturn during the first 3 s of red');
 cbar = colorbar;
@@ -513,14 +586,14 @@ colormap parula;
 cbar.Label.String = 'If pblue + pred >= p(blue+red)';
 cbar.Ticks = [0, 1];
 cbar.TickLabels = {'Superlinear'; 'Sublinear'};
-hold on; plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
+plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
 if denoise
-    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); 
-    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'super_sub-lineaer_denoise']);
+    xlim([-0.1, 0.8]); ylim([-0.1, 0.8]); title('Denoise');
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', 'super_sub-lineaer_denoise');
     savefig(gcf, savename);
 else
-    xlim([0, 1]); ylim([0, 1]); 
-    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'super_sub-lineaer']);
+    xlim([0, 0.8]); ylim([0, 0.8]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', 'super_sub-lineaer');
     savefig(gcf, savename);
 end
 
@@ -540,12 +613,12 @@ cbar.Label.String = 'pblue + pred - p(blue+red)';
 cbar.Limits = [-0.6, 0.6];
 hold on; plot([0, 1], [1, 0]); legend('', 'x + y = 1'); hold off;
 if denoise
-    xlim([-0.2, 0.6]); ylim([-0.2, 0.6]); 
+    xlim([-0.1, 0.8]); ylim([-0.1, 0.8]); title('Denoise');
     savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'linearity_denoise']);
     savefig(gcf, savename);
 else
-    xlim([0, 1]); ylim([0, 1]); 
-    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', [prefix, 'linearity']);
+    xlim([0, 0.8]); ylim([0, 0.8]); 
+    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', 'linearity');
     savefig(gcf, savename);
 end
 
@@ -582,7 +655,28 @@ savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', ['all_', 'pb
 savefig(gcf, savename);
 
 
-% Kullback–Leibler divergence
+% pboth-pred vs pboth-pblue, different types with different shapes
+response_marker = {'.', '.', '.', 'o', '.', '.', '.', '+'}; % {'.', 'o', '.', '|', '.', '_', '.', '+'};  % adjust based on needs------
+response_color = {'c', 'c', 'c', 'r', 'c', 'c', 'c', 'k'};
+figure; hold on;
+for m = 1 : length(pturn_type)  % m types of larva
+    pturn = pturn_type{m};
+    if isempty(pturn)
+        x = pturn_type{1}(:, 11) - pturn_type{1}(:, 1);  % if empty, assign it as '000'. Require '000' isn't empty
+        y = pturn_type{1}(:, 11) - pturn_type{1}(:, 6);
+    else
+        x = pturn(:, 11) - pturn(:, 1);  % pboth-pblue
+        y = pturn(:, 11) - pturn(:, 6);
+    end
+    ax(m) = plot(x, y, [response_marker{m}, response_color{m}]);
+end 
+hold off;
+legend(ax([4, 8, 1]), {name_type_cell{[4, 8]}, 'Others'}, 'Location', 'best');  
+%legend(ax([2, 4, 6, 8, 1]), {name_type_cell{[2, 4, 6, 8]}, 'Others'}, 'Location', 'best');  %----------
+xlabel('Pboth-Pblue'); ylabel('Pboth-Pred');
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\', 'pboth-predVSpboth-pblue');
+savefig(gcf, savename);
+%% Kullback–Leibler divergence
 kld_blue = zeros(size(pturn_all, 1), 1);
 kld_red = zeros(size(pturn_all, 1), 1);
 kld_blue_terms = zeros(size(pturn_all, 1), 5);
@@ -590,51 +684,50 @@ kld_red_terms = zeros(size(pturn_all, 1), 5);
 for j = 1 : size(pturn_all, 1)  % the j-th row (larva) of the pturn
     P_blue = pturn_all(j, 1:5);  % + 0.025 to eliminate 0 probability
     P_red = pturn_all(j, 6:10);  % 1/40, add 1 turn to every bin
-    Q = pturn_all(j, 11:15);
-    [kld_blue(j), kld_blue_terms(j, :)] = KL_divergence(Q, P_blue);
-    [kld_red(j), kld_red_terms(j, :)] = KL_divergence(Q, P_red);
+    Q = [0.2, 0.2, 0.2, 0.2, 0.2];  %Q = pturn_all(j, 11:15);
+    [kld_blue(j), kld_blue_terms(j, :)] = KL_divergence(P_blue, Q);
+    [kld_red(j), kld_red_terms(j, :)] = KL_divergence(P_red, Q);
 end
-% number of larva for each type, in order of 000, 001, 010, 011, 100, 101, 110, 111
-nlarva_type = [size(pturn_000, 1), size(pturn_001, 1), size(pturn_010, 1), size(pturn_011, 1),size(pturn_100, 1), size(pturn_101, 1), size(pturn_110, 1), size(pturn_111, 1)];
-boundary_type = 0.5 + [nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), sum(nlarva_type(1:7))];
-response_type = {'000', '001', '010', '011', '100', '101', '110', '111'};
+% % number of larva for each type, in order of 000, 001, 010, 011, 100, 101, 110, 111, done by automatical naming before
+% nlarva_type = [size(pturn_000, 1), size(pturn_001, 1), size(pturn_010, 1), size(pturn_011, 1),size(pturn_100, 1), size(pturn_101, 1), size(pturn_110, 1), size(pturn_111, 1)];
+% boundary_type = 0.5 + [nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), sum(nlarva_type(1:7))];
+% name_type_cell = {'000', '001', '010', '011', '100', '101', '110', '111'};
 
+% DKL verses larva index
 figure;  % all 3s bins
 ax(1) = subplot(2, 1, 1);
 p1 = plot(kld_blue, 'b-');
 xline(boundary_type, 'k--');
-text([0.5 boundary_type] + nlarva_type/2, 0.1 + max(kld_blue)*ones(1, length(response_type)), response_type);
-xlabel('Larva Index'); ylabel('D_{KL}(Pbluered||Pblue)');
+text(boundary_type - 0.5*nlarva_type, 0.1 + max(kld_blue)*ones(1, length(name_type_cell)), name_type_cell);
+xlabel('Larva Index'); ylabel('D_{KL}(Pblue||Pdark)');
 ax(2) = subplot(2, 1, 2);
 p2 = plot(kld_red, 'r-'); 
-xlabel('Larva Index'); ylabel('D_{KL}(Pbluered||Pred)')
+xlabel('Larva Index'); ylabel('D_{KL}(Pred||Pdark)')
 xline(boundary_type, 'k--');  % draw black dash line to seperate different response type
-text([0.5 boundary_type] + nlarva_type/2, 0.1 + max(kld_red)*ones(1, length(response_type)), response_type);
+text(boundary_type - 0.5*nlarva_type, 0.1 + max(kld_red)*ones(1, length(name_type_cell)), name_type_cell);
 % legend([p1, p2], {'D_{KL}(Pblue||Pbluered)', 'D_{KL}(Pred||Pbluered)'});
-ylim([ax(1), ax(2)], [-1, 4]);
-sgtitle('Raw pturn');
-savename = strcat(pwd, '\results_fig', '\Dkl_larvaIndex_reverse');
+ylim([ax(1), ax(2)], [-0.5, 2.5]);
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\Dkl_both_single_larvaIndex');
 savefig(gcf, savename);
 
+% DKL verses larva index with histogram of DKL on the side
 figure;  % a 3s bin
 ax(1) = subplot(2, 3, [1, 2]);
-p1 = plot(kld_blue_terms(:, 1), 'b-');
-xline([nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), ...
-    sum(nlarva_type(1:7))] + 0.5, 'k--');
-xlabel('Larva Index in order of 000, 001, 010, 011, 100, 101, 110, 111'); ylabel('D_{KL}(Pblue||Pbluered)');
+p1 = plot(kld_blue, 'b-');
+xline(boundary_type, 'k--');
+xlabel('Larva Index'); ylabel('D_{KL}(Pblue||Pdark)');
 ax(2) = subplot(2, 3, 3);
-histogram(kld_blue_terms(:, 1), 'Orientation', 'horizontal'); xlabel('Count of larvae');
+histogram(kld_blue, 'Orientation', 'horizontal'); xlabel('Count of larvae');
 ax(3) = subplot(2, 3, [4, 5]);
-p2 = plot(kld_red_terms(:, 1), 'r-'); 
-xlabel('Larva Index in order of 000, 001, 010, 011, 100, 101, 110, 111'); ylabel('D_{KL}(Pred||Pbluered)')
-xline([nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), ...
-    sum(nlarva_type(1:7))] + 0.5, 'k--');  % draw black dash line to seperate different response type
+p2 = plot(kld_red, 'r-'); 
+xlabel('Larva Index'); ylabel('D_{KL}(Pred||Pdark)')
+xline(boundary_type, 'k--');  % draw black dash line to seperate different response type
 ax(4) = subplot(2, 3, 6);
-histogram(kld_red_terms(:, 1), 'Orientation', 'horizontal'); xlabel('Count of larvae');
+histogram(kld_red, 'Orientation', 'horizontal'); xlabel('Count of larvae');
 % legend([p1, p2], {'D_{KL}(Pblue||Pbluered) of 2nd bin', 'D_{KL}(Pred||Pbluered) of 2nd bin'});
-ylim([ax(1), ax(3), ax(2), ax(4)], [-1, 4]);
-sgtitle('Add 1 turn to each bin');
-savename = strcat(pwd, '\results_fig', '\Dkl_larvaIndex_add1turn_1stbin_reverse');
+ylim([ax(1), ax(3), ax(2), ax(4)], [0, 1.2]);
+% sgtitle('Add 1 turn to each bin');
+savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\Dkl_prop_single_dark_larvaIndex');
 savefig(gcf, savename);
 
 
@@ -703,15 +796,11 @@ end
 
 % DKL_blue vs DKL red
 % number of larva for each type, in order of 000, 001, 010, 011, 100, 101, 110, 111
-nlarva_type = [size(pturn_000, 1), size(pturn_001, 1), size(pturn_010, 1), size(pturn_011, 1),size(pturn_100, 1), size(pturn_101, 1), size(pturn_110, 1), size(pturn_111, 1)];
-boundary_type = 0.5 + [nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), sum(nlarva_type(1:7))];
-response_type = {'000', '001', '010', '011', '100', '101', '110', '111'};
 response_marker = {'.', 'o', '.', '|', '.', '_', '.', '+'};
 response_color = {'c', 'g', 'c', 'r', 'c', 'b', 'c', 'k'};
-pturns = {pturn_000, pturn_001, pturn_010, pturn_011, pturn_100, pturn_101, pturn_110, pturn_111};
 figure; hold on;
-for m = 1 : length(pturns)  % m types of larva
-    pturn = pturns{m};
+for m = 1 : length(pturn_type)  % m types of larva
+    pturn = pturn_type{m};
     kld_blue = zeros(size(pturn, 1), 1);
     kld_red = zeros(size(pturn, 1), 1);
     kld_blue_terms = zeros(size(pturn, 1), 5);
@@ -728,16 +817,13 @@ end  % end looping different types of larvae
 hold off;
 xlabel('DKL blue'); ylabel('DKL red');
 title('pturn = pturn + 0.025, D_{KL}(single||both color)');
-legend(ax([2, 4, 6, 8, 1]), {response_type{[2, 4, 6, 8]}, 'Others'}, 'Location', 'best');
+legend(ax([2, 4, 6, 8, 1]), {name_type_cell{[2, 4, 6, 8]}, 'Others'}, 'Location', 'best');
 savename = strcat(pwd, '\results_fig', '\DKLblue-DKLred_add1turn');
 savefig(gcf, savename);
 
 
 % DKL_blue histogram of each response type
 % number of larva for each type, in order of 000, 001, 010, 011, 100, 101, 110, 111
-nlarva_type = [size(pturn_000, 1), size(pturn_001, 1), size(pturn_010, 1), size(pturn_011, 1),size(pturn_100, 1), size(pturn_101, 1), size(pturn_110, 1), size(pturn_111, 1)];
-boundary_type = 0.5 + [nlarva_type(1), sum(nlarva_type(1:2)), sum(nlarva_type(1:3)), sum(nlarva_type(1:4)), sum(nlarva_type(1:5)), sum(nlarva_type(1:6)), sum(nlarva_type(1:7))];
-response_type = {'000', '001', '010', '011', '100', '101', '110', '111'};
 response_type_major = {'001', '011', '101', '111'};
 response_marker = {'.', 'o', '.', '|', '.', '_', '.', '+'};
 response_color = {'c', 'g', 'c', 'r', 'c', 'b', 'c', 'k'};
@@ -768,8 +854,7 @@ savename = strcat(pwd, '\results_fig', '\DKLblue_hist_add1turn');
 savefig(gcf, savename);
 
 
-% Pearson correlation coefficient
-
+%% Pearson correlation coefficient
 [R, P, RL, RU] = corrcoef(transpose(pturn_all(:, 11:15)));
 imagesc(R, [-1, 1]);
 cbar = colorbar; cbar.Label.String = 'Pearson correlation coefficient'; cbar.FontSize = 18;
@@ -789,7 +874,7 @@ savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\pcc_pturn_bluer
 savefig(gcf, savename);
 
 
-% plot the pturn from larva index 
+%% plot the pturn from larva index 
 index_larva = 95:104;
 edges = 0:3:15;
 xbar = edges(1: numel(edges)-1) + diff(edges)/2;

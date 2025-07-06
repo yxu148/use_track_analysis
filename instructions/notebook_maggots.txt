@@ -33,7 +33,7 @@ Does reorientation also include pause? Yes. The track is divided into 'run' and 
 getSubFieldDQ doesn't work with inds or ind--------------------
 eset.expt.track(3).getSubFieldDQ('reorientation', 'eti', 'inds = [1 2 3]', 'position', 'start')
 still give all reorientation start time, instead of only first 3 reorientation.
-The 'position' is the name of attribute that can be input, which including 'start', 'end', etc. It means what 'position' of the subfield you want to get the quantity from.
+The 'position' is the name of attribute that can be input, which including 'start', 'end' 'mean', etc. It means what 'position' of the subfield you want to get the quantity from.
 
 d = dir(fullfile(basedir, 'matfiles', '*.mat'));
 eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d(i).name})); % load the i-th .mat, probably won't load tracks for i=1
@@ -42,7 +42,7 @@ eset = ExperimentSet.fromMatFiles(fullfile(basedir, 'matfiles', {d.name})); % lo
 eset.expt.globalQuantity.fieldname;  % will output all fieldname available in the experiment, e.g.,
 % 'led2Val',  'led2ValDeriv', 'led2ValDiff', after addTonToff, a few more will appear, e.g., 
 'led2Val_high', 'led2Val_low',  'led2Val_ton', 'led2Val_toff', 'led2Val_cyclenum_on', 'led2Val_cyclenum_off'
-eset.gatherField('fieldname');  % will get the values of fieldname
+eset.gatherField('fieldname');  % will get the values of fieldname for all expts and all tracks
 
 ? How does the software get the value 'led2Val'? The length of 'led2Val' is much longer than the stimulation bin file and experiment time.
 We will get a BIN file contain information of LED intensity (PWM, per bit) output right after finishing experiment, together with MMF file. e.g.,
@@ -71,6 +71,7 @@ Go to check how does the standard error is plotted in function makeReorientation
 eset.gatherField('fieldname');  % get the fieldname of all tracks of all expts in the eset
 eset.expt.gatherField('fieldname');  % get the fieldname of all tracks in the expt of eset
 eset.expt(1).track(1).getSubFieldDQ(subfield, derivedQuantityName, varargin);  % get the dq quantities of the track(1) under certain condition (varargin)
+eset.expt(1).track.getSubFieldDQ(subfield, derivedQuantityName, varargin);  % get the dq quantities of the subfield of all tracks of expt(1) under certain condition (varargin)
 eset.gatherFromSubField(subfield, derivedQuantityName, varargin);  % get the dq quantities of all tracks of all expts of the eset under certain condition (varargin)
 eset.expt(1).gatherFromSubField(subfield, derivedQuantityName, varargin);  % get the dq quantities of all tracks of expt(1) under certain condition (varargin)
 
@@ -92,6 +93,12 @@ processBIN.m has variable processingOptions, you can edit parameters    and whic
 			\@ESetCleaner\ESetCleaner.m which receive cleaning rules and call clean in
 				\@ESetCleaner\clean.m to remove invalid tracks.
 
+eset.expt(1).dr is class of derivation rules, containing 3 attributes:
+	interpTime: 0.05 (in unit of second, dependent on camera frame rate, my case is 20 Hz, so the interpolated time is 0.05 s per frame.)
+	smoothTime: 0.4571
+	derivTime: 0.2286, where is it from?
+To calculate derivative of a discrete quantity, it uses derivative Gaussian kernal (in function deriv()), with mean of 0 and std of sigma = derivTime/interpTime. The kernal spans integers from -3*sigma to 3*sigma.
+In my case, sigma = 4.57
 
 
 
@@ -156,5 +163,7 @@ After put black agar plate to the right place, wait a few minutes after all dust
 
 Should run processMMF.m from its directory.
 
-When analyzing the data, there is a chance the globalquantity doesn't contain ledVals, also there are BIN files saved in extracted folder and . 
+When analyzing the data, there is a chance the globalquantity doesn't contain ledVals, also there are BIN files saved in extracted folder. 
 I don't know the reason, but close the app and re-transfer the BIN files can possibly solve the problem.
+
+Transferring BIN files fails. Redo, reboot PC, clear SD card.
