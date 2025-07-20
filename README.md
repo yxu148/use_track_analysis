@@ -16,11 +16,16 @@ the extracted data and logs.
 ## load_data.m, load_multi_data.m
 Analyze MAT files. I use load_data.m to try analyzing one experiment and use load_multi_data.m to analyze multiple experiments.
 load_multi_data.m will make a data structure data.mat, which saves important features for each larva and will be needed for the other plots in the furture.
+**Together with these codes, all the codes below need to adjust the base directory according to the directory of your extracted data.
+All of these codes with, for example '_gr21a' in the end is specifically for the data of Gr21a larvae.**
 
 ## plot_from_data.m
 Add more properties to data.mat and plot figures based on data.mat
 
 ## info_from_pturn.m
 Plot figures related to turn probability based on data.mat
+
+## track_trace.m
+Modified version of Isabel's code to generate video of larvae moving with track ID labeled.
 
 ## Other files are not useful for you to run.
