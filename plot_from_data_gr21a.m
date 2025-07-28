@@ -9,10 +9,7 @@ basedir_cell = {
 x_cell = {
     1:21
     };
-% larvaNum = {[1], [7], [2], [24]};  % larva index in each expt, could be [1 2 4]
-% larvaNum = {[5], [2], [7], [4]};  % larva index in each expt, could be [1 2 4]
 pause('off');
-
 
 % create figlocation_list, a cell containing all folders of results
 nexp = length([x_cell{:}]);  % number of experiments
@@ -28,9 +25,37 @@ for folder_index = 1 : length(x_cell)  % loop for each basedir folder
     end
 end
 
+%% create a label 'valid' for each larva based on if the speed is ever bigger than 0.8 cm/min
+
+save_data = true;
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
+for j = 1 : length(figlocation_list)
+    savename = strcat(figlocation_list{j}, '\data.mat');
+    load(savename, 'larvae');
+    for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
+        larva_index = ['larva', num2str(i)];
+        speed = getfield(larvae, larva_index, 'speed');
+        %  if the maximum speed under any stimulation condition is less
+        %  than 0.8 cm/min, label the larva invalid.
+        if (max(speed.(stim_color{1})) < 0.8) || (max(speed.(stim_color{2})) < 0.8) || (max(speed.(stim_color{3})) < 0.8)
+            larvae.(larva_index).valid = 0;
+        else
+            larvae.(larva_index).valid = 1;
+        end  % end if criteria
+    end  % end looping all larva in the larvae
+
+    if save_data
+        if isfile(savename)
+            save(savename, 'larvae', '-append')
+        else
+            save(savename, 'larvae')
+        end
+    end  % end saving data
+end  % end looping each experiment
+
 %% plot info (CDF) of a group of larvae to one graph, or other plots about CDF
 tperiod = 15; 
-download = false; 
+download = true; 
 pause on;
 color_pad = {'b', 'r', 'k'};
 stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
@@ -113,67 +138,10 @@ if plot_cdf_mean
 end
 
 
-
-%% average turn rate of multiple larvae across different experiments
-tperiod = 15; 
-download = false; 
-pause on;
-color_pad = {'b', 'r', 'k'};
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-stepsize = 0.1; binsize = 0.5;  % seconds
-
-figure;
-for k = 1 : length(color_pad)  % loop for each stimulation
-    nperiod_all = 0;
-    turnStart_all = [];
-    for j = 1 : length(figlocation_list)
-        savename = strcat(figlocation_list{j}, '\data.mat');
-        load(savename, 'larvae');
-        for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
-%         for i = larvaNum{j}  % select certain larva to plot
-            if getfield(larvae, ['larva', num2str(i)], 'valid')
-                turnStart = getfield(larvae, ['larva', num2str(i)], 'turnStart');
-                turnStartTime = getfield(larvae, ['larva', num2str(i)], 'turnStartTime');
-                nperiod = getfield(larvae, ['larva', num2str(i)], 'nperiod');
-                turnStart_all = [turnStart_all, turnStart.(stim_color{k})];
-                nperiod_all = nperiod_all + nperiod.(stim_color{k});
-            end  % end if valid larva
-        end  % end looping larvae
-    end  % end looping experiments
-    
-    turnStart_all_toff = ton_to_toff(turnStart_all, 6, 9);
-
-    [turnrate_all, std] = rate_from_time(turnStart_all_toff, tperiod, stepsize, binsize);
-    turnrate_all = turnrate_all./ double(nperiod_all) * 60;
-    std = std ./ double(nperiod_all) * 60;
-    time_timestep = [0 : fix(tperiod/stepsize)] * stepsize;
-
-    ax(k) = subplot(length(color_pad),1,k);
-    plot(time_timestep, turnrate_all); xline(9, 'k--');
-    xlabel('ton (s)'); ylabel('Reorientation Rate (per min)'); 
-    title([num2str(length(turnStart_all)), ' turns, in ', num2str(nperiod_all), ' periods, ', num2str(k), '-th intensity of stimulation']);
-
-    hold on;  % to add standard deviation
-    uppercurve = turnrate_all + 0.5*std;
-    lowercurve = turnrate_all - 0.5*std;
-    x_tofill = [time_timestep, fliplr(time_timestep)];  % the x axis of the ploygon to fill
-    y_tofill = [lowercurve, fliplr(uppercurve)];
-    pathObj = fill(x_tofill, y_tofill, color_pad{k}, 'FaceAlpha', 0.2, 'LineStyle', 'none');  % no edges for the patch
-    hold off;
-
-end  % end looping stimluation conditions
-sgtitle(['Step size = ', num2str(stepsize), ', bin size = ', num2str(binsize)]); linkaxes(ax, 'y');  % align subplots with y axis
-pause;
-if download
-    savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\turnrate');
-    savefig(gcf, savename);
-end
-close;
-
 %% average turn rate of multiple larvae across different experiments, plot together
 tperiod = 15; 
-download = false; 
-pause on;
+download = true; 
+pause off;
 color_pad = {'b', 'r', 'k'};
 stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 handles = gobjects(1, length(color_pad)); % Preallocate array for handles
@@ -227,117 +195,12 @@ if download
 end
 close;
 
-%% create a new response with new criteria
-
-save_data = true;
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-for j = 1 : length(figlocation_list)
-    savename = strcat(figlocation_list{j}, '\data.mat');
-    load(savename, 'larvae');
-    for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
-%     for i = larvaNum{j}  % select certain larva to plot
-        larva_index = ['larva', num2str(i)];
-        pturn = getfield(larvae, larva_index, 'pturn');
-        for k = 1 : length(fieldnames(pturn))  % loop for each stimulation
-            if pturn.(stim_color{k})(1) - mean(pturn.(stim_color{k})(3:end)) > 0.2  % if the first bin of pturn is much larger than low, call it response
-                larvae.(larva_index).response.(stim_color{k}) = '1';
-            elseif mean(pturn.(stim_color{k})(1:2)) - mean(pturn.(stim_color{k})(3:end)) > 0.2
-                larvae.(larva_index).response.(stim_color{k}) = '1';
-            else
-                larvae.(larva_index).response.(stim_color{k}) = '0';
-            end  % end defining response2
-        end  % end looping for every stimulation
-    end  % end looping for every larva
-
-    if save_data
-        savename = strcat(figlocation_list{j}, '\data.mat');
-        if isfile(savename)
-            save(savename, 'larvae', '-append')
-        else
-            save(savename, 'larvae')
-        end
-    end  % end saving data
-
-end  % end looping for every experiments 
-
-
-%% create a label 'valid' for each larva based on if the speed is ever bigger than 0.8 cm/min
-
-save_data = true;
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-for j = 1 : length(figlocation_list)
-    savename = strcat(figlocation_list{j}, '\data.mat');
-    load(savename, 'larvae');
-    for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
-        larva_index = ['larva', num2str(i)];
-        speed = getfield(larvae, larva_index, 'speed');
-        %  if the maximum speed under any stimulation condition is less
-        %  than 0.8 cm/min, label the larva invalid.
-        if (max(speed.(stim_color{1})) < 0.8) || (max(speed.(stim_color{2})) < 0.8) || (max(speed.(stim_color{3})) < 0.8)
-            larvae.(larva_index).valid = 0;
-        else
-            larvae.(larva_index).valid = 1;
-        end  % end if criteria
-    end  % end looping all larva in the larvae
-
-    if save_data
-        if isfile(savename)
-            save(savename, 'larvae', '-append')
-        else
-            save(savename, 'larvae')
-        end
-    end  % end saving data
-end  % end looping each experiment
-
-
-%% distribution of max speed under different stimulation
-
-stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
-max_speed = [];
-for j = 1 : length(figlocation_list)
-    savename = strcat(figlocation_list{j}, '\data.mat');
-    load(savename, 'larvae');
-    for i = 1 : length(fieldnames(larvae))  % loop every larva in the experiment
-        larva_index = ['larva', num2str(i)];
-        speed = getfield(larvae, larva_index, 'speed');
-        max_speed = [max_speed, max(speed.(stim_color{1})), max(speed.(stim_color{2})), max(speed.(stim_color{3}))];
-    end
-end
-
-figure; histogram(max_speed);
-xlabel('Maximum speed under one stimulation (cm/min)'); ylabel('Count');
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_max_speed');
-savefig(gcf, savename);
-
-%% Mean run speed of each early start track verses the duration of the track
-latest_start = 120;  % seconds, select the tracks that start earlier than latest_start time. 80% length
-frame_rate = 20;  % number of frames per second
-v_run_mean = [];  % cm/min
-duration = [];  % min
-for j = 1 : length(figlocation_list)
-    savename = strcat(figlocation_list{j}, '\data.mat');
-    load(savename, 'tracks');
-    for i = 1 : length(fieldnames(tracks))  % loop every track in the experiment
-        track_index = ['track', num2str(i)];
-        if getfield(tracks, track_index, 'startFrame') <= latest_start * frame_rate
-            v_run_mean_temp = getfield(tracks, track_index, 'speed_run_mean');
-            endtime_temp = getfield(tracks, track_index, 'endFrame') / frame_rate /60;  % min
-            v_run_mean = [v_run_mean, v_run_mean_temp];
-            duration = [duration, endtime_temp];  % end time of early start track is called duration here
-        end  % end if early track
-    end  % end looping tracks
-end  % end looping expts
-
-figure; plot(duration, v_run_mean, 'o');
-xlabel('Duration of larvae (min)'); ylabel('Mean run speed (cm/min)');
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\speed_mean_run-duration_early_start_tracks');
-savefig(gcf, savename);
 
 %% create a label 'init_speed' for each larva,
 % based on the mean speed within 1 second before stimulation on
 % with unit of cm/min, and 1 float number for each stimulation
 save_data = true;
-stim_color = {'blue', 'red', 'bluered', 'dark'};  % descripiton of the t_stim_start
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 stepsize = 0.1;  % in second, when generate the speed vectors
 dt = 1;  % in second, get mean speed of 1 second before stimulation on
 init_speed = [];
@@ -364,7 +227,7 @@ end
 
 %% distribution of initial speed (within 1 s before stimulation) for each stimulation
 
-stim_color = {'blue', 'red', 'bluered', 'dark'};  % descripiton of the t_stim_start
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 init_speed = [];  % num_larvae-by-num_stim
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
@@ -385,8 +248,7 @@ savefig(gcf, savename);
 
 %% distribution of initial speed (within 1 s before stimulation) for each pulse for each stimulation
 
-stim_color = {'blue', 'red', 'bluered', 'dark'};  % descripiton of the t_stim_start
-title_name = {'Visual stimulation', 'Or42a stimulation', 'Visual and Or42a stimulation', 'No stimulation'};
+stim_color = {'blue', 'red', 'bluered'};  % descripiton of the t_stim_start
 init_speed = cell(1, length(stim_color));  % num_larvae-by-num_stim
 for j = 1 : length(figlocation_list)
     savename = strcat(figlocation_list{j}, '\data.mat');
@@ -411,7 +273,6 @@ for i = 1: size(init_speed, 2)
     y = nSamples * binWidth * normpdf(x, mu, sigma);
     plot(x, y, 'LineWidth', 2)
     legend('Data Histogram', sprintf('Gaussian Fit (\\mu = %.2f, \\sigma = %.2f)', mu, sigma), 'Location', 'eastoutside')
-    title(title_name{i}); xlim([0, 4]);
 end
 sgtitle({'Mean speed within 1 second before stimulation on', 'of each pulse of each larvae (cm/min)'});  % multiple lines
 savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_1smean_speed_stim_pulse_GaussianFit');
@@ -493,12 +354,6 @@ for j = 1 : length(figlocation_list)
     end
 end
 
-figure; histogram(time_larvae);  %, 'Normalization', 'probability');
-xlabel('Length of long tracks (min)'); ylabel('Count');
-title(['Total ', num2str(length(time_larvae)), ' larvae']);
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_long_track_length_full');
-savefig(gcf, savename);
-
 % hist_longTurnTime_long_track without seperating different stimulation
 figure; histogram(longTurnPercentLarvae, 'Normalization', 'probability');
 xlabel('Percentage of long turn time of each larvae (%)'); ylabel('Probability');
@@ -520,15 +375,6 @@ for j = 1 : length(figlocation_list)
         endFrame_all = [endFrame_all, endFrame];
     end
 end
-figure; histogram(startFrame_all/1200, 30);  % nbins
-xlabel('Start time of all tracks (min)'); ylabel('Count');
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_track_startFrame');
-savefig(gcf, savename);
-
-figure; histogram(endFrame_all/1200, 30);  % nbins
-xlabel('End time of all tracks (min)'); ylabel('Count');
-savename = strcat(basedir_cell{1}, '\results', '\results_fig', '\hist_track_endFrame');
-savefig(gcf, savename);
 
 figure; h = histogram(endFrame_all(startFrame_all < 2400)/1200, 0:1:30, 'Normalization', 'probability');  % nbins, 'Normalization', 'probability'
 xlabel('Duration of larval tracks (min)'); ylabel('Percent of larvae'); pbaspect([3, 2, 1]);
